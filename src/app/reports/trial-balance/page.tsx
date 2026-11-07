@@ -1,9 +1,9 @@
 import { Suspense } from "react";
+import { Tx } from "@/components/i18n/Tx";
 import { PageHeader } from "@/components/PageHeader";
 import { DateRangeFilter } from "@/components/reports/DateRangeFilter";
 import { ExportCsvButton } from "@/components/reports/ExportCsvButton";
 import { trialBalance } from "@/lib/reports";
-import { L } from "@/lib/labels";
 import { formatPKR } from "@/lib/money";
 
 
@@ -23,7 +23,7 @@ export default async function TrialBalancePage({
 
   return (
     <div>
-      <PageHeader title={L.trialBalance} />
+      <PageHeader title={<Tx k="trialBalance" />} />
       <Suspense>
         <DateRangeFilter />
       </Suspense>
@@ -35,9 +35,9 @@ export default async function TrialBalancePage({
           <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
             <tr>
               <th className="px-3 py-2">Code</th>
-              <th className="px-3 py-2">{L.account}</th>
-              <th className="px-3 py-2 text-right">{L.debit}</th>
-              <th className="px-3 py-2 text-right">{L.credit}</th>
+              <th className="px-3 py-2"><Tx k="account" /></th>
+              <th className="px-3 py-2 text-right"><Tx k="debit" /></th>
+              <th className="px-3 py-2 text-right"><Tx k="credit" /></th>
             </tr>
           </thead>
           <tbody>
@@ -59,7 +59,7 @@ export default async function TrialBalancePage({
           <tfoot>
             <tr className="border-t border-[var(--border)] bg-[var(--surface-2)] font-semibold">
               <td className="px-3 py-2" colSpan={2}>
-                {L.total}
+                <Tx k="total" />
               </td>
               <td className="px-3 py-2 text-right">{formatPKR(data.totalDebit)}</td>
               <td className="px-3 py-2 text-right">{formatPKR(data.totalCredit)}</td>

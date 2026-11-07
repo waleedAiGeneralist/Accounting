@@ -1,11 +1,11 @@
 import { Suspense } from "react";
+import { Tx } from "@/components/i18n/Tx";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/PageHeader";
 import { DateRangeFilter } from "@/components/reports/DateRangeFilter";
 import { ExportCsvButton } from "@/components/reports/ExportCsvButton";
 import { accountLedger, partyLedger } from "@/lib/reports";
-import { L } from "@/lib/labels";
 import { formatDate } from "@/lib/dates";
 import { formatPKR } from "@/lib/money";
 import { LedgerFilters } from "./LedgerFilters";
@@ -53,7 +53,7 @@ export default async function LedgerPage({
 
   return (
     <div>
-      <PageHeader title={L.ledger} subtitle={titleEntity} />
+      <PageHeader title={<Tx k="ledger" />} subtitle={titleEntity} />
       <Suspense>
         <DateRangeFilter
           extra={<LedgerFilters accounts={accounts} parties={parties} />}
@@ -66,10 +66,10 @@ export default async function LedgerPage({
         <table className="w-full text-sm">
           <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
             <tr>
-              <th className="px-3 py-2">{L.date}</th>
-              <th className="px-3 py-2">{L.narration}</th>
-              <th className="px-3 py-2 text-right">{L.debit}</th>
-              <th className="px-3 py-2 text-right">{L.credit}</th>
+              <th className="px-3 py-2"><Tx k="date" /></th>
+              <th className="px-3 py-2"><Tx k="narration" /></th>
+              <th className="px-3 py-2 text-right"><Tx k="debit" /></th>
+              <th className="px-3 py-2 text-right"><Tx k="credit" /></th>
               <th className="px-3 py-2 text-right">Balance</th>
             </tr>
           </thead>

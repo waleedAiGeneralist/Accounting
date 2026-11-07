@@ -1,14 +1,15 @@
 import Link from "next/link";
+import { Tx } from "@/components/i18n/Tx";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/PageHeader";
 import { VoucherActions } from "@/components/vouchers/VoucherActions";
-import { L, VOUCHER_TYPE_LABEL } from "@/lib/labels";
+import { VOUCHER_TYPE_KEYS } from "@/lib/labels";
 import { formatDate } from "@/lib/dates";
 import { formatPKR } from "@/lib/money";
 
-
 export const dynamic = "force-dynamic";
+
 export default async function VoucherDetailPage({
   params,
 }: {
@@ -30,11 +31,12 @@ export default async function VoucherDetailPage({
   const totalDebit = voucher.lines.reduce((s, l) => s + l.debit, 0);
   const totalCredit = voucher.lines.reduce((s, l) => s + l.credit, 0);
   const canReverse = !voucher.isReversal && !voucher.reversedBy;
+  const typeKey = VOUCHER_TYPE_KEYS[voucher.type];
 
   return (
     <div>
       <PageHeader
-        title={VOUCHER_TYPE_LABEL[voucher.type] ?? voucher.type}
+        title={typeKey ? <Tx k={typeKey} /> : voucher.type}
         subtitle={formatDate(voucher.date)}
         actions={
           <Link
@@ -48,11 +50,11 @@ export default async function VoucherDetailPage({
 
       <div className="mb-4 grid gap-4 md:grid-cols-3">
         <div className="card-panel">
-          <div className="text-xs text-[var(--muted)]">{L.party}</div>
+          <div className="text-xs text-[var(--muted)]"><Tx k="party" /></div>
           <div className="font-semibold">{voucher.party?.name ?? "—"}</div>
         </div>
         <div className="card-panel md:col-span-2">
-          <div className="text-xs text-[var(--muted)]">{L.narration}</div>
+          <div className="text-xs text-[var(--muted)]"><Tx k="narration" /></div>
           <div>{voucher.narration}</div>
           {voucher.isReversal && voucher.reverses ? (
             <p className="mt-2 text-xs text-amber-700">
@@ -77,9 +79,9 @@ export default async function VoucherDetailPage({
         <table className="w-full text-sm">
           <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
             <tr>
-              <th className="px-3 py-2">{L.account}</th>
-              <th className="px-3 py-2 text-right">{L.debit}</th>
-              <th className="px-3 py-2 text-right">{L.credit}</th>
+              <th className="px-3 py-2"><Tx k="account" /></th>
+              <th className="px-3 py-2 text-right"><Tx k="debit" /></th>
+              <th className="px-3 py-2 text-right"><Tx k="credit" /></th>
             </tr>
           </thead>
           <tbody>
@@ -100,7 +102,7 @@ export default async function VoucherDetailPage({
           </tbody>
           <tfoot>
             <tr className="border-t border-[var(--border)] bg-[var(--surface-2)] font-semibold">
-              <td className="px-3 py-2">{L.total}</td>
+              <td className="px-3 py-2"><Tx k="total" /></td>
               <td className="px-3 py-2 text-right">{formatPKR(totalDebit)}</td>
               <td className="px-3 py-2 text-right">{formatPKR(totalCredit)}</td>
             </tr>
@@ -113,10 +115,10 @@ export default async function VoucherDetailPage({
           <table className="w-full text-sm">
             <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
               <tr>
-                <th className="px-3 py-2">{L.item}</th>
+                <th className="px-3 py-2"><Tx k="item" /></th>
                 <th className="px-3 py-2 text-right">In</th>
                 <th className="px-3 py-2 text-right">Out</th>
-                <th className="px-3 py-2 text-right">{L.rate}</th>
+                <th className="px-3 py-2 text-right"><Tx k="rate" /></th>
               </tr>
             </thead>
             <tbody>

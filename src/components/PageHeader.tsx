@@ -5,8 +5,8 @@ export function PageHeader({
   subtitle,
   actions,
 }: {
-  title: string;
-  subtitle?: string;
+  title: ReactNode;
+  subtitle?: ReactNode;
   actions?: ReactNode;
 }) {
   return (
@@ -16,7 +16,7 @@ export function PageHeader({
           {title}
         </h1>
         {subtitle ? (
-          <p className="mt-1 text-sm text-[var(--muted)] urdu">{subtitle}</p>
+          <p className="mt-1 text-sm text-[var(--muted)]">{subtitle}</p>
         ) : null}
       </div>
       {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}

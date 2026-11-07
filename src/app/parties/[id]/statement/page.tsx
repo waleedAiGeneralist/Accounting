@@ -1,14 +1,15 @@
 import { notFound } from "next/navigation";
+import { Tx } from "@/components/i18n/Tx";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/PageHeader";
 import { partyLedger } from "@/lib/reports";
-import { L } from "@/lib/labels";
 import { formatDate } from "@/lib/dates";
 import { formatPKR } from "@/lib/money";
+import { t } from "@/lib/labels";
 import { WhatsAppShare } from "@/components/parties/WhatsAppShare";
 
-
 export const dynamic = "force-dynamic";
+
 export default async function PartyStatementPage({
   params,
 }: {
@@ -22,7 +23,7 @@ export default async function PartyStatementPage({
   const closing = rows.length ? rows[rows.length - 1].balance : opening;
 
   const text = [
-    `*${L.appName}*`,
+    `*${t("appName", "en")}*`,
     `Statement for ${party.name}`,
     `Opening: ${formatPKR(opening)}`,
     ...rows.slice(-15).map(
@@ -41,7 +42,7 @@ export default async function PartyStatementPage({
     <div>
       <PageHeader
         title={`${party.name} — Statement`}
-        subtitle={L.whatsapp}
+        subtitle={<Tx k="whatsapp" />}
         actions={<WhatsAppShare url={waUrl} />}
       />
       <div className="card-panel mb-4 flex justify-between text-sm">
@@ -52,10 +53,10 @@ export default async function PartyStatementPage({
         <table className="w-full text-sm">
           <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
             <tr>
-              <th className="px-3 py-2">{L.date}</th>
-              <th className="px-3 py-2">{L.narration}</th>
-              <th className="px-3 py-2 text-right">{L.debit}</th>
-              <th className="px-3 py-2 text-right">{L.credit}</th>
+              <th className="px-3 py-2"><Tx k="date" /></th>
+              <th className="px-3 py-2"><Tx k="narration" /></th>
+              <th className="px-3 py-2 text-right"><Tx k="debit" /></th>
+              <th className="px-3 py-2 text-right"><Tx k="credit" /></th>
               <th className="px-3 py-2 text-right">Bal</th>
             </tr>
           </thead>

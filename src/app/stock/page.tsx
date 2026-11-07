@@ -1,7 +1,7 @@
 import { PageHeader } from "@/components/PageHeader";
+import { Tx } from "@/components/i18n/Tx";
 import { StockForm } from "@/components/stock/StockForm";
 import { stockReport } from "@/lib/reports";
-import { L } from "@/lib/labels";
 import { formatPKR } from "@/lib/money";
 import Link from "next/link";
 
@@ -13,14 +13,14 @@ export default async function StockPage() {
   return (
     <div>
       <PageHeader
-        title={L.stock}
+        title={<Tx k="stock" />}
         subtitle="Rice · Kiryana · Bardana"
         actions={
           <Link
             href="/reports/stock"
             className="rounded-md border border-[var(--border)] px-3 py-2 text-sm"
           >
-            {L.stockReport}
+            <Tx k="stockReport" />
           </Link>
         }
       />
@@ -31,9 +31,9 @@ export default async function StockPage() {
         <table className="w-full text-sm">
           <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
             <tr>
-              <th className="px-3 py-2">{L.item}</th>
+              <th className="px-3 py-2"><Tx k="item" /></th>
               <th className="px-3 py-2">Category</th>
-              <th className="px-3 py-2 text-right">{L.qty}</th>
+              <th className="px-3 py-2 text-right"><Tx k="qty" /></th>
               <th className="px-3 py-2 text-right">Value</th>
             </tr>
           </thead>

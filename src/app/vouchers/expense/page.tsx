@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
+import { Tx } from "@/components/i18n/Tx";
 import { PageHeader } from "@/components/PageHeader";
 import { ExpenseForm } from "@/components/vouchers/ExpenseForm";
-import { L } from "@/lib/labels";
 import { EXPENSE_CODES } from "@/lib/accounts";
 
 
@@ -17,7 +17,7 @@ export default async function ExpensePage() {
 
   return (
     <div>
-      <PageHeader title={L.expense} subtitle="Accounts 5003–5008" />
+      <PageHeader title={<Tx k="expense" />} subtitle="Accounts 5003–5008" />
       <div className="card-panel">
         <ExpenseForm accounts={accounts} parties={parties} />
       </div>

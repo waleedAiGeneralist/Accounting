@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
+import { Tx } from "@/components/i18n/Tx";
 import { PageHeader } from "@/components/PageHeader";
 import { SalePurchaseForm } from "@/components/vouchers/SalePurchaseForm";
-import { L } from "@/lib/labels";
 
 
 export const dynamic = "force-dynamic";
@@ -13,7 +13,7 @@ export default async function SalePage() {
 
   return (
     <div>
-      <PageHeader title={L.sale} subtitle="Dr Cash/Receivables · Cr Sale · stock out" />
+      <PageHeader title={<Tx k="sale" />} subtitle="Dr Cash/Receivables · Cr Sale · stock out" />
       <div className="card-panel">
         <SalePurchaseForm kind="sale" parties={parties} items={items} />
       </div>

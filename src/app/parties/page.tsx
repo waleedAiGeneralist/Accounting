@@ -1,8 +1,8 @@
 import Link from "next/link";
+import { Tx } from "@/components/i18n/Tx";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/PageHeader";
 import { PartyForm } from "@/components/parties/PartyForm";
-import { L } from "@/lib/labels";
 
 
 export const dynamic = "force-dynamic";
@@ -11,7 +11,7 @@ export default async function PartiesPage() {
 
   return (
     <div>
-      <PageHeader title={L.parties} subtitle="Customers & suppliers" />
+      <PageHeader title={<Tx k="parties" />} subtitle="Customers & suppliers" />
       <div className="card-panel mb-6">
         <PartyForm />
       </div>

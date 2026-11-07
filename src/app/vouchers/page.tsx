@@ -1,19 +1,21 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/PageHeader";
-import { L, VOUCHER_TYPE_LABEL } from "@/lib/labels";
+import { Tx } from "@/components/i18n/Tx";
+import { VOUCHER_TYPE_KEYS } from "@/lib/labels";
+import type { LabelKey } from "@/lib/labels";
 import { formatDate } from "@/lib/dates";
 import { formatPKR } from "@/lib/money";
 
-
 export const dynamic = "force-dynamic";
-const QUICK = [
-  { href: "/vouchers/cash?kind=receipt", label: L.cashReceipt },
-  { href: "/vouchers/cash?kind=payment", label: L.cashPayment },
-  { href: "/vouchers/sale", label: L.sale },
-  { href: "/vouchers/purchase", label: L.purchase },
-  { href: "/vouchers/expense", label: L.expense },
-  { href: "/vouchers/journal", label: L.journal },
+
+const QUICK: { href: string; key: LabelKey }[] = [
+  { href: "/vouchers/cash?kind=receipt", key: "cashReceipt" },
+  { href: "/vouchers/cash?kind=payment", key: "cashPayment" },
+  { href: "/vouchers/sale", key: "sale" },
+  { href: "/vouchers/purchase", key: "purchase" },
+  { href: "/vouchers/expense", key: "expense" },
+  { href: "/vouchers/journal", key: "journal" },
 ];
 
 export default async function VouchersPage() {
@@ -29,7 +31,7 @@ export default async function VouchersPage() {
 
   return (
     <div>
-      <PageHeader title={L.vouchers} subtitle="Keyboard-friendly entry screens" />
+      <PageHeader title={<Tx k="vouchers" />} subtitle="Keyboard-friendly entry screens" />
       <div className="no-print mb-6 flex flex-wrap gap-2">
         {QUICK.map((q) => (
           <Link
@@ -37,7 +39,7 @@ export default async function VouchersPage() {
             href={q.href}
             className="rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-hover)]"
           >
-            {q.label}
+            <Tx k={q.key} />
           </Link>
         ))}
       </div>
@@ -46,17 +48,30 @@ export default async function VouchersPage() {
         <table className="w-full text-sm">
           <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
             <tr>
-              <th className="px-3 py-2">{L.date}</th>
-              <th className="px-3 py-2">Type</th>
-              <th className="px-3 py-2">{L.party}</th>
-              <th className="px-3 py-2">{L.narration}</th>
-              <th className="px-3 py-2 text-right">{L.amount}</th>
-              <th className="px-3 py-2">Status</th>
+              <th className="px-3 py-2">
+                <Tx k="date" />
+              </th>
+              <th className="px-3 py-2">
+                <Tx k="type" />
+              </th>
+              <th className="px-3 py-2">
+                <Tx k="party" />
+              </th>
+              <th className="px-3 py-2">
+                <Tx k="narration" />
+              </th>
+              <th className="px-3 py-2 text-right">
+                <Tx k="amount" />
+              </th>
+              <th className="px-3 py-2">
+                <Tx k="status" />
+              </th>
             </tr>
           </thead>
           <tbody>
             {vouchers.map((v) => {
               const amount = v.lines.reduce((s, l) => s + l.debit, 0);
+              const typeKey = VOUCHER_TYPE_KEYS[v.type];
               return (
                 <tr key={v.id} className="border-t border-[var(--border)] hover:bg-[var(--surface-2)]/50">
                   <td className="px-3 py-2">
@@ -64,17 +79,25 @@ export default async function VouchersPage() {
                       {formatDate(v.date)}
                     </Link>
                   </td>
-                  <td className="px-3 py-2">{VOUCHER_TYPE_LABEL[v.type] ?? v.type}</td>
+                  <td className="px-3 py-2">
+                    {typeKey ? <Tx k={typeKey} /> : v.type}
+                  </td>
                   <td className="px-3 py-2">{v.party?.name ?? "—"}</td>
                   <td className="max-w-xs truncate px-3 py-2">{v.narration}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{formatPKR(amount)}</td>
                   <td className="px-3 py-2 text-xs">
                     {v.isReversal ? (
-                      <span className="text-amber-700 dark:text-amber-300">Reversal</span>
+                      <span className="text-amber-700 dark:text-amber-300">
+                        <Tx k="reversal" />
+                      </span>
                     ) : v.reversedBy ? (
-                      <span className="text-red-700 dark:text-red-300">Reversed</span>
+                      <span className="text-red-700 dark:text-red-300">
+                        <Tx k="reversed" />
+                      </span>
                     ) : (
-                      <span className="text-emerald-700 dark:text-emerald-300">Active</span>
+                      <span className="text-emerald-700 dark:text-emerald-300">
+                        <Tx k="active" />
+                      </span>
                     )}
                   </td>
                 </tr>

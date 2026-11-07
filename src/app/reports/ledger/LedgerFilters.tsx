@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { Tx } from "@/components/i18n/Tx";
 import { FormField, Select } from "@/components/ui/FormField";
-import { L } from "@/lib/labels";
 
 type Account = { id: string; code: string; name: string };
 type Party = { id: string; name: string };
@@ -28,7 +28,7 @@ export function LedgerFilters({
 
   return (
     <>
-      <FormField label={L.account}>
+      <FormField label={<Tx k="account" />}>
         <Select
           value={sp.get("accountId") ?? ""}
           onChange={(e) => setParam("accountId", e.target.value, ["partyId"])}
@@ -40,7 +40,7 @@ export function LedgerFilters({
           ))}
         </Select>
       </FormField>
-      <FormField label={L.party}>
+      <FormField label={<Tx k="party" />}>
         <Select
           value={sp.get("partyId") ?? ""}
           onChange={(e) => setParam("partyId", e.target.value, e.target.value ? ["accountId"] : [])}

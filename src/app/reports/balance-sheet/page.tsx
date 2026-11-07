@@ -1,9 +1,9 @@
 import { Suspense } from "react";
+import { Tx } from "@/components/i18n/Tx";
 import { PageHeader } from "@/components/PageHeader";
 import { DateRangeFilter } from "@/components/reports/DateRangeFilter";
 import { ExportCsvButton } from "@/components/reports/ExportCsvButton";
 import { balanceSheet } from "@/lib/reports";
-import { L } from "@/lib/labels";
 import { formatPKR } from "@/lib/money";
 
 
@@ -31,7 +31,7 @@ function Section({
           </li>
         ))}
         <li className="flex justify-between border-t border-[var(--border)] pt-2 font-semibold">
-          <span>{L.total}</span>
+          <span><Tx k="total" /></span>
           <span>{formatPKR(total)}</span>
         </li>
       </ul>
@@ -55,7 +55,7 @@ export default async function BalanceSheetPage({
 
   return (
     <div>
-      <PageHeader title={L.balanceSheet} subtitle={sp.to ? `As of ${sp.to}` : "As of today"} />
+      <PageHeader title={<Tx k="balanceSheet" />} subtitle={sp.to ? `As of ${sp.to}` : "As of today"} />
       <Suspense>
         <DateRangeFilter />
       </Suspense>

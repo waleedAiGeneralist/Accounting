@@ -1,7 +1,7 @@
 import Link from "next/link";
+import { Tx } from "@/components/i18n/Tx";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/PageHeader";
-import { L } from "@/lib/labels";
 import { formatDate } from "@/lib/dates";
 import { formatPKR } from "@/lib/money";
 
@@ -51,12 +51,12 @@ export default async function SearchPage({
 
   return (
     <div>
-      <PageHeader title={L.search} subtitle={query ? `Results for “${query}”` : "Type in the nav search"} />
+      <PageHeader title={<Tx k="search" />} subtitle={query ? `Results for “${query}”` : "Type in the nav search"} />
       {!query ? (
         <p className="text-[var(--muted)]">Enter a party, voucher narration, item, or account.</p>
       ) : (
         <div className="space-y-6">
-          <ResultBlock title={L.parties}>
+          <ResultBlock title={<Tx k="parties" />}>
             {parties.map((p) => (
               <li key={p.id}>
                 <Link href={`/parties/${p.id}/statement`} className="text-[var(--accent)] hover:underline">
@@ -66,7 +66,7 @@ export default async function SearchPage({
               </li>
             ))}
           </ResultBlock>
-          <ResultBlock title={L.vouchers}>
+          <ResultBlock title={<Tx k="vouchers" />}>
             {vouchers.map((v) => (
               <li key={v.id}>
                 <Link href={`/vouchers/${v.id}`} className="text-[var(--accent)] hover:underline">
@@ -76,14 +76,14 @@ export default async function SearchPage({
               </li>
             ))}
           </ResultBlock>
-          <ResultBlock title={L.stock}>
+          <ResultBlock title={<Tx k="stock" />}>
             {items.map((i) => (
               <li key={i.id}>
                 {i.name} [{i.category}]
               </li>
             ))}
           </ResultBlock>
-          <ResultBlock title={L.accounts}>
+          <ResultBlock title={<Tx k="accounts" />}>
             {accounts.map((a) => (
               <li key={a.id}>
                 <Link
@@ -101,7 +101,7 @@ export default async function SearchPage({
   );
 }
 
-function ResultBlock({ title, children }: { title: string; children: React.ReactNode }) {
+function ResultBlock({ title, children }: { title: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="card-panel">
       <h2 className="mb-2 font-display font-semibold text-[var(--accent)]">{title}</h2>
