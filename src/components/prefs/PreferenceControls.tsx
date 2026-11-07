@@ -20,36 +20,50 @@ function SegButton({
   onClick,
   children,
   title,
+  className = "",
 }: {
   active: boolean;
   onClick: () => void;
   children: React.ReactNode;
   title?: string;
+  className?: string;
 }) {
   return (
     <button
       type="button"
       title={title}
       onClick={onClick}
-      className={`rounded-md px-2.5 py-1.5 text-xs font-semibold transition ${
+      className={`min-h-9 rounded-md px-2.5 py-1.5 text-xs font-semibold transition sm:min-h-8 ${
         active
           ? "bg-[var(--accent)] text-white shadow-sm"
           : "bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--fg)]"
-      }`}
+      } ${className}`}
     >
       {children}
     </button>
   );
 }
 
-/** Compact controls for the top nav. */
-export function NavPreferenceControls() {
+/** Compact controls for the top nav / mobile sheet. */
+export function NavPreferenceControls({
+  compact = true,
+}: {
+  compact?: boolean;
+}) {
   const { lang, theme, setLang, setTheme } = usePrefs();
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div
+      className={`flex ${
+        compact
+          ? "flex-wrap items-center justify-end gap-1.5"
+          : "w-full flex-col gap-3"
+      }`}
+    >
       <div
-        className="flex rounded-md border border-[var(--border)] p-0.5"
+        className={`flex rounded-md border border-[var(--border)] p-0.5 ${
+          compact ? "" : "w-full"
+        }`}
         role="group"
         aria-label="Language"
       >
@@ -59,13 +73,16 @@ export function NavPreferenceControls() {
             active={lang === l.id}
             onClick={() => setLang(l.id)}
             title={l.label}
+            className={compact ? "" : "flex-1 py-2.5 text-sm"}
           >
             {l.id === "en" ? "EN" : l.id === "ur" ? "اردو" : "EN+UR"}
           </SegButton>
         ))}
       </div>
       <div
-        className="flex rounded-md border border-[var(--border)] p-0.5"
+        className={`flex rounded-md border border-[var(--border)] p-0.5 ${
+          compact ? "" : "w-full"
+        }`}
         role="group"
         aria-label="Theme"
       >
@@ -75,8 +92,9 @@ export function NavPreferenceControls() {
             active={theme === th.id}
             onClick={() => setTheme(th.id)}
             title={th.labelEn}
+            className={compact ? "" : "flex-1 py-2.5 text-sm"}
           >
-            {th.icon}
+            {compact ? th.icon : `${th.icon} ${th.labelEn}`}
           </SegButton>
         ))}
       </div>
@@ -89,7 +107,7 @@ export function SettingsPreferences() {
   const { lang, theme, setLang, setTheme } = usePrefs();
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid gap-4 sm:grid-cols-2">
       <div className="card-panel space-y-3">
         <div>
           <h2 className="font-display text-lg font-semibold">
@@ -105,7 +123,7 @@ export function SettingsPreferences() {
               key={l.id}
               type="button"
               onClick={() => setLang(l.id)}
-              className={`flex items-center justify-between rounded-md border px-3 py-2.5 text-left text-sm transition ${
+              className={`flex min-h-11 items-center justify-between rounded-md border px-3 py-2.5 text-left text-sm transition ${
                 lang === l.id
                   ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]"
                   : "border-[var(--border)] hover:bg-[var(--surface-2)]"
@@ -133,7 +151,7 @@ export function SettingsPreferences() {
               key={th.id}
               type="button"
               onClick={() => setTheme(th.id)}
-              className={`flex items-center justify-between rounded-md border px-3 py-2.5 text-left text-sm transition ${
+              className={`flex min-h-11 items-center justify-between rounded-md border px-3 py-2.5 text-left text-sm transition ${
                 theme === th.id
                   ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]"
                   : "border-[var(--border)] hover:bg-[var(--surface-2)]"

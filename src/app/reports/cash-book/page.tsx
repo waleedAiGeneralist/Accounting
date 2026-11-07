@@ -39,7 +39,7 @@ export default async function CashBookPage({
       <div className="mb-3 no-print">
         <ExportCsvButton filename="cash-book.csv" rows={csv} />
       </div>
-      <div className="card-panel overflow-x-auto p-0">
+      <div className="card-panel table-scroll p-0">
         <table className="w-full text-sm">
           <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
             <tr>

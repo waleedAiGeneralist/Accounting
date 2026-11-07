@@ -32,19 +32,19 @@ export default async function VouchersPage() {
   return (
     <div>
       <PageHeader title={<Tx k="vouchers" />} subtitle="Keyboard-friendly entry screens" />
-      <div className="no-print mb-6 flex flex-wrap gap-2">
+      <div className="no-print mb-4 grid grid-cols-2 gap-2 sm:mb-6 sm:flex sm:flex-wrap">
         {QUICK.map((q) => (
           <Link
             key={q.href}
             href={q.href}
-            className="rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-hover)]"
+            className="inline-flex min-h-11 items-center justify-center rounded-md bg-[var(--accent)] px-3 py-2 text-center text-sm font-semibold text-white hover:bg-[var(--accent-hover)] sm:min-h-10"
           >
             <Tx k={q.key} />
           </Link>
         ))}
       </div>
 
-      <div className="card-panel overflow-x-auto p-0">
+      <div className="card-panel table-scroll p-0">
         <table className="w-full text-sm">
           <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
             <tr>

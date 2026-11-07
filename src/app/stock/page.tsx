@@ -27,7 +27,7 @@ export default async function StockPage() {
       <div className="card-panel mb-6">
         <StockForm />
       </div>
-      <div className="card-panel overflow-x-auto p-0">
+      <div className="card-panel table-scroll p-0">
         <table className="w-full text-sm">
           <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
             <tr>

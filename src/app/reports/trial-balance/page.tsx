@@ -30,7 +30,7 @@ export default async function TrialBalancePage({
       <div className="mb-3 no-print">
         <ExportCsvButton filename="trial-balance.csv" rows={csv} />
       </div>
-      <div className="card-panel overflow-x-auto p-0">
+      <div className="card-panel table-scroll p-0">
         <table className="w-full text-sm">
           <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
             <tr>

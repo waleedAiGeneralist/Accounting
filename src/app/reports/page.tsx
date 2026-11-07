@@ -18,14 +18,14 @@ export default function ReportsIndexPage() {
   return (
     <div>
       <PageHeader title={<Tx k="reports" />} subtitle="Date-range · print · CSV" />
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {REPORTS.map((r) => (
           <Link
             key={r.href}
             href={r.href}
-            className="card-panel transition hover:border-[var(--accent)] hover:shadow-sm"
+            className="card-panel min-h-11 transition hover:border-[var(--accent)] hover:shadow-sm active:scale-[0.99]"
           >
-            <div className="font-display text-lg font-semibold text-[var(--accent)]">
+            <div className="font-display text-base font-semibold text-[var(--accent)] sm:text-lg">
               <Tx k={r.key} />
             </div>
             <p className="mt-1 text-sm text-[var(--muted)]">{r.desc}</p>

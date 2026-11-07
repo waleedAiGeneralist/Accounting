@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Source_Sans_3, Noto_Naskh_Arabic } from "next/font/google";
 import { Nav } from "@/components/layout/Nav";
 import { PreferencesProvider } from "@/components/prefs/PreferencesProvider";
@@ -26,6 +26,21 @@ const urdu = Noto_Naskh_Arabic({
 export const metadata: Metadata = {
   title: "Hisab Kitab — Rice & Kiryana",
   description: "Double-entry accounting for Pakistani rice & kiryana shops",
+  appleWebApp: {
+    capable: true,
+    title: "Hisab Kitab",
+    statusBarStyle: "default",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#eef3f1" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f1714" },
+  ],
 };
 
 /** Prevent theme/lang flash before React hydrates. */
@@ -62,12 +77,12 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: bootScript }} />
       </head>
-      <body className="min-h-full flex flex-col antialiased">
+      <body className="flex min-h-full flex-col antialiased">
         <PreferencesProvider>
           <div className="page-shell flex min-h-full flex-1 flex-col">
             <Nav />
-            <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</main>
-            <footer className="no-print border-t border-[var(--border)] py-4 text-center text-xs text-[var(--muted)]">
+            <main className="page-main">{children}</main>
+            <footer className="no-print border-t border-[var(--border)] px-[var(--page-pad-x)] py-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-center text-xs text-[var(--muted)]">
               <Tx k="appName" /> · <Tx k="localFirst" /> · v1
             </footer>
           </div>

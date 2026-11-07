@@ -70,7 +70,7 @@ export function JournalForm({ accounts }: { accounts: Account[] }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mx-auto flex max-w-3xl flex-col gap-4">
+    <form onSubmit={onSubmit} className="mx-auto flex w-full max-w-3xl flex-col gap-4">
       <Flash error={error} />
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField label={<Tx k="date" />}>
@@ -81,7 +81,7 @@ export function JournalForm({ accounts }: { accounts: Account[] }) {
         </FormField>
       </div>
 
-      <div className="overflow-x-auto rounded-md border border-[var(--border)]">
+      <div className="table-scroll rounded-md border border-[var(--border)]">
         <table className="w-full text-sm">
           <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
             <tr>
@@ -161,10 +161,11 @@ export function JournalForm({ accounts }: { accounts: Account[] }) {
         </table>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         <Button
           type="button"
           variant="secondary"
+          className="w-full sm:w-auto"
           onClick={() =>
             setLines((prev) => [
               ...prev,
@@ -174,10 +175,10 @@ export function JournalForm({ accounts }: { accounts: Account[] }) {
         >
           + Line
         </Button>
-        <Button type="submit" disabled={pending || !totals.balanced}>
+        <Button type="submit" disabled={pending || !totals.balanced} className="w-full sm:w-auto">
           {pending ? "…" : t("save")}
         </Button>
-        <Button type="button" variant="ghost" onClick={() => router.back()}>
+        <Button type="button" variant="ghost" className="w-full sm:w-auto" onClick={() => router.back()}>
           {t("cancel")}
         </Button>
       </div>

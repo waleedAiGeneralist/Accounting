@@ -87,7 +87,7 @@ export function SalePurchaseForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="mx-auto flex max-w-xl flex-col gap-4">
+    <form onSubmit={onSubmit} className="mx-auto flex w-full max-w-xl flex-col gap-4">
       <Flash error={error} />
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField label={<Tx k="date" />}>
@@ -115,7 +115,7 @@ export function SalePurchaseForm({
         </Select>
       </FormField>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         <FormField
           label={
             <>
@@ -124,13 +124,13 @@ export function SalePurchaseForm({
             </>
           }
         >
-          <Input type="number" min="0" step="0.01" value={qty} onChange={(e) => setQty(e.target.value)} required />
+          <Input type="number" min="0" step="0.01" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} required />
         </FormField>
         <FormField label={<Tx k="rate" />}>
-          <Input type="number" min="0" step="0.01" value={rate} onChange={(e) => setRate(e.target.value)} required />
+          <Input type="number" min="0" step="0.01" inputMode="decimal" value={rate} onChange={(e) => setRate(e.target.value)} required />
         </FormField>
         <FormField label={<Tx k="discount" />}>
-          <Input type="number" min="0" step="0.01" value={discount} onChange={(e) => setDiscount(e.target.value)} />
+          <Input type="number" min="0" step="0.01" inputMode="decimal" value={discount} onChange={(e) => setDiscount(e.target.value)} />
         </FormField>
       </div>
 
@@ -177,11 +177,11 @@ export function SalePurchaseForm({
         <Textarea rows={2} value={narration} onChange={(e) => setNarration(e.target.value)} />
       </FormField>
 
-      <div className="flex gap-2">
-        <Button type="submit" disabled={pending}>
+      <div className="flex flex-col-reverse gap-2 sm:flex-row">
+        <Button type="submit" disabled={pending} className="w-full sm:w-auto">
           {pending ? "…" : t("save")}
         </Button>
-        <Button type="button" variant="ghost" onClick={() => router.back()}>
+        <Button type="button" variant="ghost" className="w-full sm:w-auto" onClick={() => router.back()}>
           {t("cancel")}
         </Button>
       </div>

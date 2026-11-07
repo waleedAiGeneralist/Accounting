@@ -14,7 +14,7 @@ export default async function AccountsPage() {
       <PageHeader title={<Tx k="accounts" />} subtitle="Chart of accounts (چارٹ آف اکاؤنٹس)" />
       <div className="space-y-6">
         {groups.map((g) => (
-          <div key={g} className="card-panel overflow-x-auto p-0">
+          <div key={g} className="card-panel table-scroll p-0">
             <div className="bg-[var(--surface-2)] px-3 py-2 font-display font-semibold text-[var(--accent)]">
               {g}
             </div>

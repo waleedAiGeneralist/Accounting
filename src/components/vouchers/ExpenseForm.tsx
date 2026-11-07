@@ -58,7 +58,7 @@ export function ExpenseForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="mx-auto flex max-w-xl flex-col gap-4">
+    <form onSubmit={onSubmit} className="mx-auto flex w-full max-w-xl flex-col gap-4">
       <Flash error={error} />
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField label={<Tx k="date" />}>
@@ -100,11 +100,11 @@ export function ExpenseForm({
       <FormField label={<Tx k="narration" />}>
         <Textarea rows={2} value={narration} onChange={(e) => setNarration(e.target.value)} required />
       </FormField>
-      <div className="flex gap-2">
-        <Button type="submit" disabled={pending}>
+      <div className="flex flex-col-reverse gap-2 sm:flex-row">
+        <Button type="submit" disabled={pending} className="w-full sm:w-auto">
           {pending ? "…" : t("save")}
         </Button>
-        <Button type="button" variant="ghost" onClick={() => router.back()}>
+        <Button type="button" variant="ghost" className="w-full sm:w-auto" onClick={() => router.back()}>
           {t("cancel")}
         </Button>
       </div>

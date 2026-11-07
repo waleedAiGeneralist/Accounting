@@ -75,7 +75,7 @@ export default async function VoucherDetailPage({
         </div>
       </div>
 
-      <div className="card-panel mb-4 overflow-x-auto p-0">
+      <div className="card-panel mb-4 table-scroll p-0">
         <table className="w-full text-sm">
           <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
             <tr>
@@ -111,7 +111,7 @@ export default async function VoucherDetailPage({
       </div>
 
       {voucher.stockMoves.length > 0 ? (
-        <div className="card-panel mb-4 overflow-x-auto p-0">
+        <div className="card-panel mb-4 table-scroll p-0">
           <table className="w-full text-sm">
             <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
               <tr>
