@@ -1,8 +1,8 @@
 import { PageHeader } from "@/components/PageHeader";
+import { Tx } from "@/components/i18n/Tx";
 import { ExportCsvButton } from "@/components/reports/ExportCsvButton";
 import { PrintButton } from "@/components/reports/PrintButton";
 import { stockReport } from "@/lib/reports";
-import { L } from "@/lib/labels";
 import { formatPKR } from "@/lib/money";
 
 
@@ -24,7 +24,7 @@ export default async function StockReportPage() {
 
   return (
     <div>
-      <PageHeader title={L.stockReport} />
+      <PageHeader title={<Tx k="stockReport" />} />
       <div className="mb-3 no-print flex gap-2">
         <ExportCsvButton filename="stock.csv" rows={csv} />
         <PrintButton />
@@ -33,10 +33,10 @@ export default async function StockReportPage() {
         <table className="w-full text-sm">
           <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
             <tr>
-              <th className="px-3 py-2">{L.item}</th>
+              <th className="px-3 py-2"><Tx k="item" /></th>
               <th className="px-3 py-2">Category</th>
-              <th className="px-3 py-2 text-right">{L.qty}</th>
-              <th className="px-3 py-2 text-right">Avg {L.rate}</th>
+              <th className="px-3 py-2 text-right"><Tx k="qty" /></th>
+              <th className="px-3 py-2 text-right">Avg <Tx k="rate" /></th>
               <th className="px-3 py-2 text-right">Value</th>
             </tr>
           </thead>
@@ -56,7 +56,7 @@ export default async function StockReportPage() {
           <tfoot>
             <tr className="border-t border-[var(--border)] bg-[var(--surface-2)] font-semibold">
               <td className="px-3 py-2" colSpan={4}>
-                {L.total}
+                <Tx k="total" />
               </td>
               <td className="px-3 py-2 text-right">{formatPKR(totalValue)}</td>
             </tr>

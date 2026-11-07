@@ -3,7 +3,8 @@
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { FormField, Input, Button } from "@/components/ui/FormField";
-import { L } from "@/lib/labels";
+import { Tx } from "@/components/i18n/Tx";
+import { usePrefs } from "@/components/prefs/PreferencesProvider";
 
 export function DateRangeFilter({
   extra,
@@ -13,6 +14,7 @@ export function DateRangeFilter({
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
+  const { t } = usePrefs();
   const [from, setFrom] = useState(sp.get("from") ?? "");
   const [to, setTo] = useState(sp.get("to") ?? "");
 
@@ -28,18 +30,18 @@ export function DateRangeFilter({
 
   return (
     <form onSubmit={apply} className="no-print mb-4 flex flex-wrap items-end gap-3">
-      <FormField label={L.from}>
+      <FormField label={<Tx k="from" />}>
         <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
       </FormField>
-      <FormField label={L.to}>
+      <FormField label={<Tx k="to" />}>
         <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
       </FormField>
       {extra}
       <Button type="submit" variant="secondary">
-        Apply
+        {t("apply")}
       </Button>
       <Button type="button" variant="ghost" onClick={() => window.print()}>
-        {L.print}
+        <Tx k="print" />
       </Button>
     </form>
   );

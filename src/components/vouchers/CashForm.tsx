@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { createCashVoucher } from "@/app/actions/vouchers";
 import { FormField, Input, Select, Textarea, Button } from "@/components/ui/FormField";
 import { Flash } from "./Flash";
-import { L } from "@/lib/labels";
+import { Tx } from "@/components/i18n/Tx";
+import { usePrefs } from "@/components/prefs/PreferencesProvider";
 import { todayISO } from "@/lib/dates";
 
 type Party = { id: string; name: string; type: string };
@@ -21,6 +22,7 @@ export function CashForm({
   accounts: Account[];
 }) {
   const router = useRouter();
+  const { t, lang } = usePrefs();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -37,6 +39,12 @@ export function CashForm({
     }
     return parties.filter((p) => p.type === "SUPPLIER" || p.type === "BOTH");
   }, [parties, kind]);
+
+  function accountLabel(a: Account) {
+    if (lang === "ur") return `${a.code} — ${a.nameUrdu}`;
+    if (lang === "both") return `${a.code} — ${a.name} (${a.nameUrdu})`;
+    return `${a.code} — ${a.name}`;
+  }
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -68,7 +76,7 @@ export function CashForm({
     <form onSubmit={onSubmit} className="mx-auto flex max-w-xl flex-col gap-4">
       <Flash error={error} success={success} />
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label={L.date}>
+        <FormField label={<Tx k="date" />}>
           <Input
             type="date"
             value={date}
@@ -77,14 +85,14 @@ export function CashForm({
             autoFocus
           />
         </FormField>
-        <FormField label={biMode()}>
+        <FormField label={<Tx k="cash" />}>
           <Select value={mode} onChange={(e) => setMode(e.target.value as "cash" | "bank")}>
-            <option value="cash">{L.cash}</option>
-            <option value="bank">{L.bank}</option>
+            <option value="cash">{t("cash")}</option>
+            <option value="bank">{t("bank")}</option>
           </Select>
         </FormField>
       </div>
-      <FormField label={L.party}>
+      <FormField label={<Tx k="party" />}>
         <Select value={partyId} onChange={(e) => setPartyId(e.target.value)}>
           <option value="">—</option>
           {filteredParties.map((p) => (
@@ -94,16 +102,16 @@ export function CashForm({
           ))}
         </Select>
       </FormField>
-      <FormField label={kind === "receipt" ? "From Account (اکاؤنٹ سے)" : "To Account (اکاؤنٹ کو)"}>
+      <FormField label={<Tx k="account" />}>
         <Select value={accountId} onChange={(e) => setAccountId(e.target.value)} required>
           {accounts.map((a) => (
             <option key={a.id} value={a.id}>
-              {a.code} — {a.name} ({a.nameUrdu})
+              {accountLabel(a)}
             </option>
           ))}
         </Select>
       </FormField>
-      <FormField label={L.amount}>
+      <FormField label={<Tx k="amount" />}>
         <Input
           type="number"
           min="0"
@@ -113,7 +121,7 @@ export function CashForm({
           required
         />
       </FormField>
-      <FormField label={L.narration}>
+      <FormField label={<Tx k="narration" />}>
         <Textarea
           rows={2}
           value={narration}
@@ -122,16 +130,12 @@ export function CashForm({
       </FormField>
       <div className="flex gap-2">
         <Button type="submit" disabled={pending}>
-          {pending ? "…" : L.save}
+          {pending ? "…" : t("save")}
         </Button>
         <Button type="button" variant="ghost" onClick={() => router.back()}>
-          {L.cancel}
+          {t("cancel")}
         </Button>
       </div>
     </form>
   );
-}
-
-function biMode() {
-  return "Cash / Bank (نقد / بینک)";
 }

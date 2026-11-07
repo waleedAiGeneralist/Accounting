@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/PageHeader";
 import { CashForm } from "@/components/vouchers/CashForm";
-import { L } from "@/lib/labels";
+import { Tx } from "@/components/i18n/Tx";
 import { CODES } from "@/lib/accounts";
 
-
 export const dynamic = "force-dynamic";
+
 export default async function CashVoucherPage({
   searchParams,
 }: {
@@ -29,7 +29,7 @@ export default async function CashVoucherPage({
   return (
     <div>
       <PageHeader
-        title={kind === "receipt" ? L.cashReceipt : L.cashPayment}
+        title={kind === "receipt" ? <Tx k="cashReceipt" /> : <Tx k="cashPayment" />}
         subtitle="Auto-posts Dr/Cr against Cash or Bank"
       />
       <div className="card-panel">

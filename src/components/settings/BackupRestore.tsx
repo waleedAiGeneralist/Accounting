@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/FormField";
 import { Flash } from "@/components/vouchers/Flash";
-import { L } from "@/lib/labels";
+import { Tx } from "@/components/i18n/Tx";
+import { usePrefs } from "@/components/prefs/PreferencesProvider";
 
 export function BackupRestore() {
+  const { t } = usePrefs();
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -42,10 +44,10 @@ export function BackupRestore() {
           href="/api/backup"
           className="inline-flex items-center rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-hover)]"
         >
-          {L.backup}
+          <Tx k="backup" />
         </a>
         <label className="inline-flex cursor-pointer items-center rounded-md border border-[var(--border)] px-4 py-2 text-sm font-semibold hover:bg-[var(--surface-2)]">
-          {busy ? "…" : L.restore}
+          {busy ? "…" : t("restore")}
           <input type="file" accept=".db,application/octet-stream" className="hidden" onChange={onRestore} />
         </label>
       </div>

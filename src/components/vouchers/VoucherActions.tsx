@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { reverseVoucherAction } from "@/app/actions/vouchers";
 import { Button } from "@/components/ui/FormField";
 import { Flash } from "./Flash";
-import { L } from "@/lib/labels";
+import { usePrefs } from "@/components/prefs/PreferencesProvider";
 
 export function VoucherActions({
   id,
@@ -15,6 +15,7 @@ export function VoucherActions({
   canReverse: boolean;
 }) {
   const router = useRouter();
+  const { t } = usePrefs();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -40,7 +41,7 @@ export function VoucherActions({
           });
         }}
       >
-        {pending ? "…" : L.delete}
+        {pending ? "…" : t("delete")}
       </Button>
     </div>
   );

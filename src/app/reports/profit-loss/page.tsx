@@ -1,9 +1,9 @@
 import { Suspense } from "react";
+import { Tx } from "@/components/i18n/Tx";
 import { PageHeader } from "@/components/PageHeader";
 import { DateRangeFilter } from "@/components/reports/DateRangeFilter";
 import { ExportCsvButton } from "@/components/reports/ExportCsvButton";
 import { profitAndLoss } from "@/lib/reports";
-import { L } from "@/lib/labels";
 import { formatPKR } from "@/lib/money";
 
 
@@ -25,7 +25,7 @@ export default async function ProfitLossPage({
 
   return (
     <div>
-      <PageHeader title={L.profitLoss} />
+      <PageHeader title={<Tx k="profitLoss" />} />
       <Suspense>
         <DateRangeFilter />
       </Suspense>
@@ -47,7 +47,7 @@ export default async function ProfitLossPage({
               </li>
             ))}
             <li className="flex justify-between border-t border-[var(--border)] pt-2 font-semibold">
-              <span>{L.total}</span>
+              <span><Tx k="total" /></span>
               <span>{formatPKR(data.totalIncome)}</span>
             </li>
           </ul>
@@ -72,7 +72,7 @@ export default async function ProfitLossPage({
               </li>
             ))}
             <li className="flex justify-between border-t border-[var(--border)] pt-2 font-semibold">
-              <span>{L.total}</span>
+              <span><Tx k="total" /></span>
               <span>{formatPKR(data.totalExpense)}</span>
             </li>
           </ul>

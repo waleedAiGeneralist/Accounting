@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
+import { Tx } from "@/components/i18n/Tx";
 import { dashboardStats } from "@/lib/reports";
-import { L } from "@/lib/labels";
 import { formatPKR } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/dates";
 
-
 export const dynamic = "force-dynamic";
+
 export default async function DashboardPage() {
   const [stats, recent] = await Promise.all([
     dashboardStats(),
@@ -19,37 +19,37 @@ export default async function DashboardPage() {
   ]);
 
   const cards = [
-    { label: "Today's Sales (آج کی فروخت)", value: stats.todaySales },
-    { label: L.cash, value: stats.cash },
-    { label: L.bank, value: stats.bank },
-    { label: L.receivables, value: stats.receivables },
-    { label: L.payables, value: stats.payables },
+    { key: "todaySales" as const, value: stats.todaySales },
+    { key: "cash" as const, value: stats.cash },
+    { key: "bank" as const, value: stats.bank },
+    { key: "receivables" as const, value: stats.receivables },
+    { key: "payables" as const, value: stats.payables },
   ];
 
   return (
     <div>
       <PageHeader
-        title={L.appName}
-        subtitle="Rice & Kiryana shop ledger — چاول و کریانہ"
+        title={<Tx k="appName" />}
+        subtitle={<Tx k="shop" />}
         actions={
           <div className="flex flex-wrap gap-2">
             <Link
               href="/vouchers/sale"
               className="rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-hover)]"
             >
-              {L.sale}
+              <Tx k="sale" />
             </Link>
             <Link
               href="/vouchers/purchase"
               className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm font-semibold"
             >
-              {L.purchase}
+              <Tx k="purchase" />
             </Link>
             <Link
               href="/vouchers/cash?kind=receipt"
               className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm font-semibold"
             >
-              {L.cashReceipt}
+              <Tx k="cashReceipt" />
             </Link>
           </div>
         }
@@ -58,11 +58,13 @@ export default async function DashboardPage() {
       <div className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {cards.map((c, i) => (
           <div
-            key={c.label}
+            key={c.key}
             className="card-panel animate-in"
             style={{ animationDelay: `${i * 60}ms` }}
           >
-            <div className="text-xs text-[var(--muted)]">{c.label}</div>
+            <div className="text-xs text-[var(--muted)]">
+              <Tx k={c.key} />
+            </div>
             <div className="mt-2 font-display text-2xl font-bold tabular-nums text-[var(--accent)]">
               {formatPKR(c.value)}
             </div>
@@ -72,9 +74,11 @@ export default async function DashboardPage() {
 
       <div className="card-panel overflow-x-auto p-0">
         <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2">
-          <h2 className="font-display font-semibold">Recent vouchers (حالیہ)</h2>
+          <h2 className="font-display font-semibold">
+            <Tx k="recentVouchers" />
+          </h2>
           <Link href="/vouchers" className="text-sm text-[var(--accent)] hover:underline">
-            View all
+            <Tx k="viewAll" />
           </Link>
         </div>
         <table className="w-full text-sm">

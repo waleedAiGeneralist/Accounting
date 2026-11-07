@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { createJournalVoucher } from "@/app/actions/vouchers";
 import { FormField, Input, Select, Textarea, Button } from "@/components/ui/FormField";
 import { Flash } from "./Flash";
-import { L } from "@/lib/labels";
+import { Tx } from "@/components/i18n/Tx";
+import { usePrefs } from "@/components/prefs/PreferencesProvider";
 import { todayISO } from "@/lib/dates";
 import { roundMoney, formatPKR } from "@/lib/money";
 
@@ -15,6 +16,7 @@ type Line = { accountId: string; debit: string; credit: string };
 
 export function JournalForm({ accounts }: { accounts: Account[] }) {
   const router = useRouter();
+  const { t, lang } = usePrefs();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [date, setDate] = useState(todayISO());
@@ -30,6 +32,12 @@ export function JournalForm({ accounts }: { accounts: Account[] }) {
     const credit = roundMoney(lines.reduce((s, l) => s + Number(l.credit || 0), 0));
     return { debit, credit, balanced: Math.abs(debit - credit) < 0.005 };
   }, [lines]);
+
+  function accountLabel(a: Account) {
+    if (lang === "ur") return `${a.code} — ${a.nameUrdu}`;
+    if (lang === "both") return `${a.code} — ${a.name} (${a.nameUrdu})`;
+    return `${a.code} — ${a.name}`;
+  }
 
   function updateLine(i: number, patch: Partial<Line>) {
     setLines((prev) => prev.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
@@ -65,10 +73,10 @@ export function JournalForm({ accounts }: { accounts: Account[] }) {
     <form onSubmit={onSubmit} className="mx-auto flex max-w-3xl flex-col gap-4">
       <Flash error={error} />
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label={L.date}>
+        <FormField label={<Tx k="date" />}>
           <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required autoFocus />
         </FormField>
-        <FormField label={L.narration}>
+        <FormField label={<Tx k="narration" />}>
           <Textarea rows={1} value={narration} onChange={(e) => setNarration(e.target.value)} required />
         </FormField>
       </div>
@@ -77,10 +85,16 @@ export function JournalForm({ accounts }: { accounts: Account[] }) {
         <table className="w-full text-sm">
           <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
             <tr>
-              <th className="px-3 py-2">{L.account}</th>
-              <th className="px-3 py-2 w-32">{L.debit}</th>
-              <th className="px-3 py-2 w-32">{L.credit}</th>
-              <th className="px-3 py-2 w-16" />
+              <th className="px-3 py-2">
+                <Tx k="account" />
+              </th>
+              <th className="w-32 px-3 py-2">
+                <Tx k="debit" />
+              </th>
+              <th className="w-32 px-3 py-2">
+                <Tx k="credit" />
+              </th>
+              <th className="w-16 px-3 py-2" />
             </tr>
           </thead>
           <tbody>
@@ -93,7 +107,7 @@ export function JournalForm({ accounts }: { accounts: Account[] }) {
                   >
                     {postable.map((a) => (
                       <option key={a.id} value={a.id}>
-                        {a.code} — {a.name}
+                        {accountLabel(a)}
                       </option>
                     ))}
                   </Select>
@@ -136,7 +150,9 @@ export function JournalForm({ accounts }: { accounts: Account[] }) {
           </tbody>
           <tfoot>
             <tr className="border-t border-[var(--border)] bg-[var(--surface-2)] font-semibold">
-              <td className="px-3 py-2">{L.total}</td>
+              <td className="px-3 py-2">
+                <Tx k="total" />
+              </td>
               <td className="px-3 py-2">{formatPKR(totals.debit)}</td>
               <td className="px-3 py-2">{formatPKR(totals.credit)}</td>
               <td />
@@ -159,10 +175,10 @@ export function JournalForm({ accounts }: { accounts: Account[] }) {
           + Line
         </Button>
         <Button type="submit" disabled={pending || !totals.balanced}>
-          {pending ? "…" : L.save}
+          {pending ? "…" : t("save")}
         </Button>
         <Button type="button" variant="ghost" onClick={() => router.back()}>
-          {L.cancel}
+          {t("cancel")}
         </Button>
       </div>
     </form>

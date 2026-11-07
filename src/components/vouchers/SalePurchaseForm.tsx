@@ -8,7 +8,8 @@ import {
 } from "@/app/actions/vouchers";
 import { FormField, Input, Select, Textarea, Button } from "@/components/ui/FormField";
 import { Flash } from "./Flash";
-import { L } from "@/lib/labels";
+import { Tx } from "@/components/i18n/Tx";
+import { usePrefs } from "@/components/prefs/PreferencesProvider";
 import { todayISO } from "@/lib/dates";
 import { roundMoney, formatPKR } from "@/lib/money";
 
@@ -30,6 +31,7 @@ export function SalePurchaseForm({
   items: Item[];
 }) {
   const router = useRouter();
+  const { t } = usePrefs();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [date, setDate] = useState(todayISO());
@@ -88,10 +90,10 @@ export function SalePurchaseForm({
     <form onSubmit={onSubmit} className="mx-auto flex max-w-xl flex-col gap-4">
       <Flash error={error} />
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label={L.date}>
+        <FormField label={<Tx k="date" />}>
           <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required autoFocus />
         </FormField>
-        <FormField label={L.party}>
+        <FormField label={<Tx k="party" />}>
           <Select value={partyId} onChange={(e) => setPartyId(e.target.value)}>
             <option value="">—</option>
             {filteredParties.map((p) => (
@@ -103,7 +105,7 @@ export function SalePurchaseForm({
         </FormField>
       </div>
 
-      <FormField label={L.item}>
+      <FormField label={<Tx k="item" />}>
         <Select value={itemId} onChange={(e) => setItemId(e.target.value)} required>
           {items.map((i) => (
             <option key={i.id} value={i.id}>
@@ -114,45 +116,56 @@ export function SalePurchaseForm({
       </FormField>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <FormField label={`${L.qty}${item ? ` (${item.unit})` : ""}`}>
+        <FormField
+          label={
+            <>
+              <Tx k="qty" />
+              {item ? ` (${item.unit})` : ""}
+            </>
+          }
+        >
           <Input type="number" min="0" step="0.01" value={qty} onChange={(e) => setQty(e.target.value)} required />
         </FormField>
-        <FormField label={L.rate}>
+        <FormField label={<Tx k="rate" />}>
           <Input type="number" min="0" step="0.01" value={rate} onChange={(e) => setRate(e.target.value)} required />
         </FormField>
-        <FormField label={L.discount}>
+        <FormField label={<Tx k="discount" />}>
           <Input type="number" min="0" step="0.01" value={discount} onChange={(e) => setDiscount(e.target.value)} />
         </FormField>
       </div>
 
       <div className="rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm">
         <div className="flex justify-between">
-          <span>{L.total}</span>
+          <span>
+            <Tx k="total" />
+          </span>
           <strong>{formatPKR(total.net)}</strong>
         </div>
         {total.discount > 0 ? (
           <div className="mt-1 flex justify-between text-[var(--muted)]">
-            <span>{L.discount}</span>
+            <span>
+              <Tx k="discount" />
+            </span>
             <span>-{formatPKR(total.discount)}</span>
           </div>
         ) : null}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label="Payment (ادائیگی)">
+        <FormField label={<Tx k="payment" />}>
           <Select
             value={isCash ? "cash" : "credit"}
             onChange={(e) => setIsCash(e.target.value === "cash")}
           >
-            <option value="cash">{L.cash}</option>
-            <option value="credit">{L.creditSale}</option>
+            <option value="cash">{t("cash")}</option>
+            <option value="credit">{t("creditSale")}</option>
           </Select>
         </FormField>
         {isCash ? (
-          <FormField label="Cash / Bank">
+          <FormField label={<Tx k="bank" />}>
             <Select value={mode} onChange={(e) => setMode(e.target.value as "cash" | "bank")}>
-              <option value="cash">{L.cash}</option>
-              <option value="bank">{L.bank}</option>
+              <option value="cash">{t("cash")}</option>
+              <option value="bank">{t("bank")}</option>
             </Select>
           </FormField>
         ) : (
@@ -160,16 +173,16 @@ export function SalePurchaseForm({
         )}
       </div>
 
-      <FormField label={L.narration}>
+      <FormField label={<Tx k="narration" />}>
         <Textarea rows={2} value={narration} onChange={(e) => setNarration(e.target.value)} />
       </FormField>
 
       <div className="flex gap-2">
         <Button type="submit" disabled={pending}>
-          {pending ? "…" : L.save}
+          {pending ? "…" : t("save")}
         </Button>
         <Button type="button" variant="ghost" onClick={() => router.back()}>
-          {L.cancel}
+          {t("cancel")}
         </Button>
       </div>
     </form>

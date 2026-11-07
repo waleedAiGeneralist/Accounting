@@ -5,9 +5,9 @@ export function FormField({
   children,
   hint,
 }: {
-  label: string;
+  label: ReactNode;
   children: ReactNode;
-  hint?: string;
+  hint?: ReactNode;
 }) {
   return (
     <label className="flex flex-col gap-1.5 text-sm">

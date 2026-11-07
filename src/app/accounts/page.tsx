@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { Tx } from "@/components/i18n/Tx";
 import { PageHeader } from "@/components/PageHeader";
-import { L } from "@/lib/labels";
 import Link from "next/link";
 
 
@@ -11,7 +11,7 @@ export default async function AccountsPage() {
 
   return (
     <div>
-      <PageHeader title={L.accounts} subtitle="Chart of accounts (چارٹ آف اکاؤنٹس)" />
+      <PageHeader title={<Tx k="accounts" />} subtitle="Chart of accounts (چارٹ آف اکاؤنٹس)" />
       <div className="space-y-6">
         {groups.map((g) => (
           <div key={g} className="card-panel overflow-x-auto p-0">

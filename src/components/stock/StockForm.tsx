@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { createStockItem } from "@/app/actions/vouchers";
 import { FormField, Input, Select, Button } from "@/components/ui/FormField";
 import { Flash } from "@/components/vouchers/Flash";
-import { L } from "@/lib/labels";
+import { Tx } from "@/components/i18n/Tx";
+import { usePrefs } from "@/components/prefs/PreferencesProvider";
 
 export function StockForm() {
   const router = useRouter();
+  const { t } = usePrefs();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -32,11 +34,13 @@ export function StockForm() {
         });
       }}
     >
-      <Flash error={error} />
-      <FormField label="Name (نام)">
+      <div className="w-full sm:w-auto">
+        <Flash error={error} />
+      </div>
+      <FormField label={<Tx k="name" />}>
         <Input value={name} onChange={(e) => setName(e.target.value)} required />
       </FormField>
-      <FormField label="Category">
+      <FormField label={<Tx k="category" />}>
         <Select
           value={category}
           onChange={(e) => setCategory(e.target.value as "RICE" | "KIRYANA" | "BARDANA")}
@@ -46,7 +50,7 @@ export function StockForm() {
           <option value="BARDANA">Bardana</option>
         </Select>
       </FormField>
-      <FormField label={L.unit}>
+      <FormField label={<Tx k="unit" />}>
         <Select
           value={unit}
           onChange={(e) => setUnit(e.target.value as "KG" | "MAUND" | "BAG" | "PCS")}
@@ -58,7 +62,7 @@ export function StockForm() {
         </Select>
       </FormField>
       <Button type="submit" disabled={pending}>
-        {pending ? "…" : L.save}
+        {pending ? "…" : t("save")}
       </Button>
     </form>
   );

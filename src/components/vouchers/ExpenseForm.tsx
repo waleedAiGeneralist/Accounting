@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { createExpenseVoucher } from "@/app/actions/vouchers";
 import { FormField, Input, Select, Textarea, Button } from "@/components/ui/FormField";
 import { Flash } from "./Flash";
-import { L } from "@/lib/labels";
+import { Tx } from "@/components/i18n/Tx";
+import { usePrefs } from "@/components/prefs/PreferencesProvider";
 import { todayISO } from "@/lib/dates";
 
 type Account = { id: string; code: string; name: string; nameUrdu: string };
@@ -19,6 +20,7 @@ export function ExpenseForm({
   parties: Party[];
 }) {
   const router = useRouter();
+  const { t, lang } = usePrefs();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [date, setDate] = useState(todayISO());
@@ -27,6 +29,12 @@ export function ExpenseForm({
   const [mode, setMode] = useState<"cash" | "bank">("cash");
   const [partyId, setPartyId] = useState("");
   const [narration, setNarration] = useState("");
+
+  function accountLabel(a: Account) {
+    if (lang === "ur") return `${a.code} — ${a.nameUrdu}`;
+    if (lang === "both") return `${a.code} — ${a.name} (${a.nameUrdu})`;
+    return `${a.code} — ${a.name}`;
+  }
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,17 +61,17 @@ export function ExpenseForm({
     <form onSubmit={onSubmit} className="mx-auto flex max-w-xl flex-col gap-4">
       <Flash error={error} />
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label={L.date}>
+        <FormField label={<Tx k="date" />}>
           <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required autoFocus />
         </FormField>
-        <FormField label="Cash / Bank">
+        <FormField label={<Tx k="cash" />}>
           <Select value={mode} onChange={(e) => setMode(e.target.value as "cash" | "bank")}>
-            <option value="cash">{L.cash}</option>
-            <option value="bank">{L.bank}</option>
+            <option value="cash">{t("cash")}</option>
+            <option value="bank">{t("bank")}</option>
           </Select>
         </FormField>
       </div>
-      <FormField label={L.account}>
+      <FormField label={<Tx k="account" />}>
         <Select
           value={expenseAccountId}
           onChange={(e) => setExpenseAccountId(e.target.value)}
@@ -71,15 +79,15 @@ export function ExpenseForm({
         >
           {accounts.map((a) => (
             <option key={a.id} value={a.id}>
-              {a.code} — {a.name} ({a.nameUrdu})
+              {accountLabel(a)}
             </option>
           ))}
         </Select>
       </FormField>
-      <FormField label={L.amount}>
+      <FormField label={<Tx k="amount" />}>
         <Input type="number" min="0" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required />
       </FormField>
-      <FormField label={L.party}>
+      <FormField label={<Tx k="party" />}>
         <Select value={partyId} onChange={(e) => setPartyId(e.target.value)}>
           <option value="">—</option>
           {parties.map((p) => (
@@ -89,15 +97,15 @@ export function ExpenseForm({
           ))}
         </Select>
       </FormField>
-      <FormField label={L.narration}>
+      <FormField label={<Tx k="narration" />}>
         <Textarea rows={2} value={narration} onChange={(e) => setNarration(e.target.value)} required />
       </FormField>
       <div className="flex gap-2">
         <Button type="submit" disabled={pending}>
-          {pending ? "…" : L.save}
+          {pending ? "…" : t("save")}
         </Button>
         <Button type="button" variant="ghost" onClick={() => router.back()}>
-          {L.cancel}
+          {t("cancel")}
         </Button>
       </div>
     </form>

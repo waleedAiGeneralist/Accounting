@@ -1,9 +1,9 @@
 import Link from "next/link";
+import { Tx } from "@/components/i18n/Tx";
 import { PageHeader } from "@/components/PageHeader";
 import { ExportCsvButton } from "@/components/reports/ExportCsvButton";
 import { PrintButton } from "@/components/reports/PrintButton";
 import { payablesAging } from "@/lib/reports";
-import { L } from "@/lib/labels";
 import { formatPKR } from "@/lib/money";
 
 
@@ -26,7 +26,7 @@ export default async function PayablesPage() {
 
   return (
     <div>
-      <PageHeader title={L.payables} subtitle="Supplier aging (عمر)" />
+      <PageHeader title={<Tx k="payables" />} subtitle="Supplier aging (عمر)" />
       <div className="mb-3 no-print flex gap-2">
         <ExportCsvButton filename="payables.csv" rows={csv} />
         <PrintButton />
@@ -35,13 +35,13 @@ export default async function PayablesPage() {
         <table className="w-full text-sm">
           <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
             <tr>
-              <th className="px-3 py-2">{L.party}</th>
+              <th className="px-3 py-2"><Tx k="party" /></th>
               <th className="px-3 py-2 text-right">0–30</th>
               <th className="px-3 py-2 text-right">31–60</th>
               <th className="px-3 py-2 text-right">61–90</th>
               <th className="px-3 py-2 text-right">91–120</th>
               <th className="px-3 py-2 text-right">120+</th>
-              <th className="px-3 py-2 text-right">{L.total}</th>
+              <th className="px-3 py-2 text-right"><Tx k="total" /></th>
             </tr>
           </thead>
           <tbody>

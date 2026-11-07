@@ -1,63 +1,126 @@
-/** Bilingual label helper: English (اردو) */
-export function bi(en: string, ur: string): string {
-  return `${en} (${ur})`;
+export type LangMode = "en" | "ur" | "both";
+export type ThemeMode = "light" | "dark";
+
+export type DictEntry = { en: string; ur: string };
+
+function e(en: string, ur: string): DictEntry {
+  return { en, ur };
 }
 
-export const L = {
-  appName: bi("Hisab Kitab", "حساب کتاب"),
-  shop: bi("Rice & Kiryana", "چاول و کریانہ"),
-  dashboard: bi("Dashboard", "ڈیش بورڈ"),
-  vouchers: bi("Vouchers", "واؤچرز"),
-  cashReceipt: bi("Cash Receipt", "نقد وصولی"),
-  cashPayment: bi("Cash Payment", "نقد ادائیگی"),
-  sale: bi("Sale", "فروخت"),
-  purchase: bi("Purchase", "خریداری"),
-  expense: bi("Expense", "اخراجات"),
-  journal: bi("Journal", "جرنل"),
-  parties: bi("Parties", "پارٹیز"),
-  stock: bi("Stock", "سٹاک"),
-  accounts: bi("Accounts", "اکاؤنٹس"),
-  reports: bi("Reports", "رپورٹس"),
-  ledger: bi("Ledger", "کھاتہ"),
-  trialBalance: bi("Trial Balance", "ٹرائل بیلنس"),
-  profitLoss: bi("Profit & Loss", "منافع و نقصان"),
-  balanceSheet: bi("Balance Sheet", "بیلنس شیٹ"),
-  receivables: bi("Receivables", "وصولیاں"),
-  payables: bi("Payables", "ادائگیاں"),
-  stockReport: bi("Stock Report", "سٹاک رپورٹ"),
-  cashBook: bi("Daily Cash Book", "روزانہ کیش بک"),
-  settings: bi("Settings", "ترتیبات"),
-  save: bi("Save", "محفوظ"),
-  cancel: bi("Cancel", "منسوخ"),
-  delete: bi("Delete / Reverse", "حذف / ریورس"),
-  edit: bi("Edit", "ترمیم"),
-  date: bi("Date", "تاریخ"),
-  party: bi("Party", "پارٹی"),
-  narration: bi("Narration", "تفصیل"),
-  amount: bi("Amount", "رقم"),
-  debit: bi("Debit", "ڈیبٹ"),
-  credit: bi("Credit", "کریڈٹ"),
-  account: bi("Account", "اکاؤنٹ"),
-  item: bi("Item", "آئٹم"),
-  qty: bi("Qty", "مقدار"),
-  unit: bi("Unit", "یونٹ"),
-  rate: bi("Rate", "ریٹ"),
-  discount: bi("Discount", "ڈسکاؤنٹ"),
-  total: bi("Total", "کل"),
-  cash: bi("Cash", "نقد"),
-  creditSale: bi("Credit (Udhar)", "ادھار"),
-  bank: bi("Bank / JazzCash", "بینک / جاز کیش"),
-  from: bi("From", "سے"),
-  to: bi("To", "تک"),
-  print: bi("Print", "پرنٹ"),
-  exportCsv: bi("Export CSV", "CSV ایکسپورٹ"),
-  search: bi("Search", "تلاش"),
-  darkMode: bi("Dark Mode", "ڈارک موڈ"),
-  backup: bi("Backup DB", "بیک اپ"),
-  restore: bi("Restore DB", "ریسٹور"),
-  whatsapp: bi("WhatsApp Statement", "واٹس ایپ سٹیٹمنٹ"),
+/** Label dictionary — English + Urdu */
+export const D = {
+  appName: e("Hisab Kitab", "حساب کتاب"),
+  shop: e("Rice & Kiryana", "چاول و کریانہ"),
+  dashboard: e("Dashboard", "ڈیش بورڈ"),
+  vouchers: e("Vouchers", "واؤچرز"),
+  cashReceipt: e("Cash Receipt", "نقد وصولی"),
+  cashPayment: e("Cash Payment", "نقد ادائیگی"),
+  sale: e("Sale", "فروخت"),
+  purchase: e("Purchase", "خریداری"),
+  expense: e("Expense", "اخراجات"),
+  journal: e("Journal", "جرنل"),
+  parties: e("Parties", "پارٹیز"),
+  stock: e("Stock", "سٹاک"),
+  accounts: e("Accounts", "اکاؤنٹس"),
+  reports: e("Reports", "رپورٹس"),
+  ledger: e("Ledger", "کھاتہ"),
+  trialBalance: e("Trial Balance", "ٹرائل بیلنس"),
+  profitLoss: e("Profit & Loss", "منافع و نقصان"),
+  balanceSheet: e("Balance Sheet", "بیلنس شیٹ"),
+  receivables: e("Receivables", "وصولیاں"),
+  payables: e("Payables", "ادائگیاں"),
+  stockReport: e("Stock Report", "سٹاک رپورٹ"),
+  cashBook: e("Daily Cash Book", "روزانہ کیش بک"),
+  settings: e("Settings", "ترتیبات"),
+  save: e("Save", "محفوظ"),
+  cancel: e("Cancel", "منسوخ"),
+  delete: e("Delete / Reverse", "حذف / ریورس"),
+  edit: e("Edit", "ترمیم"),
+  date: e("Date", "تاریخ"),
+  party: e("Party", "پارٹی"),
+  narration: e("Narration", "تفصیل"),
+  amount: e("Amount", "رقم"),
+  debit: e("Debit", "ڈیبٹ"),
+  credit: e("Credit", "کریڈٹ"),
+  account: e("Account", "اکاؤنٹ"),
+  item: e("Item", "آئٹم"),
+  qty: e("Qty", "مقدار"),
+  unit: e("Unit", "یونٹ"),
+  rate: e("Rate", "ریٹ"),
+  discount: e("Discount", "ڈسکاؤنٹ"),
+  total: e("Total", "کل"),
+  cash: e("Cash", "نقد"),
+  creditSale: e("Credit (Udhar)", "ادھار"),
+  bank: e("Bank / JazzCash", "بینک / جاز کیش"),
+  from: e("From", "سے"),
+  to: e("To", "تک"),
+  print: e("Print", "پرنٹ"),
+  exportCsv: e("Export CSV", "CSV ایکسپورٹ"),
+  search: e("Search", "تلاش"),
+  darkMode: e("Dark", "ڈارک"),
+  lightMode: e("Light", "برائیٹ"),
+  theme: e("Theme", "تھیم"),
+  language: e("Language", "زبان"),
+  english: e("English", "انگریزی"),
+  urdu: e("Urdu", "اردو"),
+  bilingual: e("Both (EN + Urdu)", "دونوں (انگریزی + اردو)"),
+  backup: e("Backup DB", "بیک اپ"),
+  restore: e("Restore DB", "ریسٹور"),
+  whatsapp: e("WhatsApp Statement", "واٹس ایپ سٹیٹمنٹ"),
+  preferences: e("Preferences", "ترجیحات"),
+  themeHint: e("Choose light or dark appearance", "روشن یا تاریک ظاہری شکل چنیں"),
+  languageHint: e("Show English, Urdu, or both", "انگریزی، اردو، یا دونوں دکھائیں"),
+  type: e("Type", "قسم"),
+  status: e("Status", "حالت"),
+  opening: e("Opening", "ابتدائی"),
+  balance: e("Balance", "بیلنس"),
+  payment: e("Payment", "ادائیگی"),
+  apply: e("Apply", "لگائیں"),
+  viewAll: e("View all", "سب دیکھیں"),
+  recentVouchers: e("Recent vouchers", "حالیہ واؤچرز"),
+  todaySales: e("Today's Sales", "آج کی فروخت"),
+  active: e("Active", "فعال"),
+  reversed: e("Reversed", "ریورس"),
+  reversal: e("Reversal", "ریورسل"),
+  category: e("Category", "زمرہ"),
+  value: e("Value", "قیمت"),
+  phone: e("Phone", "فون"),
+  name: e("Name", "نام"),
+  statement: e("Statement", "سٹیٹمنٹ"),
+  customer: e("Customer", "گاہک"),
+  supplier: e("Supplier", "سپلائر"),
+  both: e("Both", "دونوں"),
+  localFirst: e("local-first", "مقامی"),
 } as const;
 
+export type LabelKey = keyof typeof D;
+
+/** Format a dictionary entry for the active language mode. */
+export function formatEntry(entry: DictEntry, lang: LangMode = "en"): string {
+  if (lang === "ur") return entry.ur;
+  if (lang === "both") return `${entry.en} (${entry.ur})`;
+  return entry.en;
+}
+
+export function t(key: LabelKey, lang: LangMode = "en"): string {
+  return formatEntry(D[key], lang);
+}
+
+/** @deprecated Prefer <Tx /> or t() — bilingual string for metadata/fallbacks */
+export const L: Record<LabelKey, string> = Object.fromEntries(
+  (Object.keys(D) as LabelKey[]).map((k) => [k, formatEntry(D[k], "both")])
+) as Record<LabelKey, string>;
+
+export const VOUCHER_TYPE_KEYS: Record<string, LabelKey> = {
+  CASH_RECEIPT: "cashReceipt",
+  CASH_PAYMENT: "cashPayment",
+  SALE: "sale",
+  PURCHASE: "purchase",
+  JOURNAL: "journal",
+  EXPENSE: "expense",
+};
+
+/** Legacy string map (bilingual) for places still needing plain strings. */
 export const VOUCHER_TYPE_LABEL: Record<string, string> = {
   CASH_RECEIPT: L.cashReceipt,
   CASH_PAYMENT: L.cashPayment,

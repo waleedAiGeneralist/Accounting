@@ -54,10 +54,34 @@ body {
   font-family: var(--font-display), var(--font-body), sans-serif;
 }
 
-.urdu {
+.urdu,
+.i18n-ur {
   font-family: var(--font-urdu), var(--font-body), sans-serif;
-  direction: rtl;
-  unicode-bidi: plaintext;
+}
+
+/* Language visibility — driven by html[data-lang] */
+html[data-lang="en"] .i18n-ur,
+html[data-lang="en"] .i18n-both {
+  display: none;
+}
+
+html[data-lang="ur"] .i18n-en,
+html[data-lang="ur"] .i18n-both {
+  display: none;
+}
+
+html[data-lang="ur"] .i18n-ur {
+  font-family: var(--font-urdu), var(--font-body), sans-serif;
+}
+
+html[data-lang="both"] .i18n-ur {
+  font-family: var(--font-urdu), var(--font-body), sans-serif;
+}
+
+/* Default before hydration: English */
+html:not([data-lang]) .i18n-ur,
+html:not([data-lang]) .i18n-both {
+  display: none;
 }
 
 .page-shell {

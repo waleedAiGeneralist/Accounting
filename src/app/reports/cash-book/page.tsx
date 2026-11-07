@@ -1,10 +1,10 @@
 import { Suspense } from "react";
+import { Tx } from "@/components/i18n/Tx";
 import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 import { DateRangeFilter } from "@/components/reports/DateRangeFilter";
 import { ExportCsvButton } from "@/components/reports/ExportCsvButton";
 import { cashBook } from "@/lib/reports";
-import { L } from "@/lib/labels";
 import { formatDate, todayISO } from "@/lib/dates";
 import { formatPKR } from "@/lib/money";
 
@@ -32,7 +32,7 @@ export default async function CashBookPage({
 
   return (
     <div>
-      <PageHeader title={L.cashBook} subtitle={`${from} → ${to}`} />
+      <PageHeader title={<Tx k="cashBook" />} subtitle={`${from} → ${to}`} />
       <Suspense>
         <DateRangeFilter />
       </Suspense>
@@ -43,8 +43,8 @@ export default async function CashBookPage({
         <table className="w-full text-sm">
           <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
             <tr>
-              <th className="px-3 py-2">{L.date}</th>
-              <th className="px-3 py-2">{L.narration}</th>
+              <th className="px-3 py-2"><Tx k="date" /></th>
+              <th className="px-3 py-2"><Tx k="narration" /></th>
               <th className="px-3 py-2 text-right">In</th>
               <th className="px-3 py-2 text-right">Out</th>
               <th className="px-3 py-2 text-right">Balance</th>
