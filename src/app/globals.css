@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+:root {
+  --background: #eef3f1;
+  --foreground: #14241f;
+  --fg: #14241f;
+  --muted: #5a6e67;
+  --surface: #ffffff;
+  --surface-2: #e4ece8;
+  --border: #c5d4cd;
+  --accent: #0f6b5c;
+  --accent-hover: #0b5549;
+  --accent-soft: #d5ebe5;
+  --accent-ring: rgba(15, 107, 92, 0.25);
+  --nav-bg: #f7faf8;
+  --hero-glow: radial-gradient(ellipse at 20% 0%, #b8ddd4 0%, transparent 55%),
+    radial-gradient(ellipse at 90% 10%, #dce8c8 0%, transparent 45%),
+    linear-gradient(180deg, #eef3f1 0%, #e2ebe7 100%);
+}
+
+.dark {
+  --background: #0f1714;
+  --foreground: #e6efeb;
+  --fg: #e6efeb;
+  --muted: #93a69e;
+  --surface: #17221e;
+  --surface-2: #1f2d28;
+  --border: #2d4038;
+  --accent: #3cb89f;
+  --accent-hover: #55c9b2;
+  --accent-soft: #1a342e;
+  --accent-ring: rgba(60, 184, 159, 0.3);
+  --nav-bg: #121c18;
+  --hero-glow: radial-gradient(ellipse at 20% 0%, #1a3d34 0%, transparent 55%),
+    radial-gradient(ellipse at 90% 10%, #243528 0%, transparent 45%),
+    linear-gradient(180deg, #0f1714 0%, #121c18 100%);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+  --font-urdu: var(--font-urdu);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), var(--font-body), sans-serif;
+}
+
+.urdu {
+  font-family: var(--font-urdu), var(--font-body), sans-serif;
+  direction: rtl;
+  unicode-bidi: plaintext;
+}
+
+.page-shell {
+  background: var(--hero-glow);
+  min-height: 100%;
+}
+
+.card-panel {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: fade-up 0.45s ease-out both;
+}
+
+main {
+  animation: fade-up 0.35s ease-out both;
+}
+
+@media print {
+  header,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+    color: black;
+  }
+  .card-panel {
+    border: none;
+    padding: 0;
+  }
+}
