@@ -1,0 +1,57 @@
+/** Well-known account codes for auto-posting. */
+export const CODES = {
+  CASH: "1001",
+  BANK: "1002",
+  RECEIVABLES: "1003",
+  ADVANCE_SUPPLIERS: "1004",
+  RICE_STOCK: "1005",
+  KIRYANA_STOCK: "1006",
+  BARDANA_STOCK: "1007",
+  PAYABLES: "2001",
+  CUSTOMER_ADVANCE: "2003",
+  CAPITAL: "3001",
+  DRAWINGS: "3002",
+  PL: "3003",
+  OPENING_EQUITY: "3004",
+  RICE_SALE: "4001",
+  KIRYANA_SALE: "4002",
+  BARDANA_SALE: "4003",
+  DISCOUNT_RECEIVED: "4004",
+  RICE_PURCHASE: "5001",
+  KIRYANA_PURCHASE: "5002",
+  FREIGHT: "5003",
+  RENT: "5004",
+  SALARY: "5005",
+  UTILITIES: "5006",
+  WASTAGE: "5007",
+  DISCOUNT_GIVEN: "5008",
+} as const;
+
+export type AccountCode = (typeof CODES)[keyof typeof CODES];
+
+export const SALE_ACCOUNT_BY_CATEGORY: Record<string, string> = {
+  RICE: CODES.RICE_SALE,
+  KIRYANA: CODES.KIRYANA_SALE,
+  BARDANA: CODES.BARDANA_SALE,
+};
+
+export const PURCHASE_ACCOUNT_BY_CATEGORY: Record<string, string> = {
+  RICE: CODES.RICE_PURCHASE,
+  KIRYANA: CODES.KIRYANA_PURCHASE,
+  BARDANA: CODES.FREIGHT, // bardana often treated as packing; use purchase via stock value
+};
+
+export const STOCK_ACCOUNT_BY_CATEGORY: Record<string, string> = {
+  RICE: CODES.RICE_STOCK,
+  KIRYANA: CODES.KIRYANA_STOCK,
+  BARDANA: CODES.BARDANA_STOCK,
+};
+
+export const EXPENSE_CODES = [
+  CODES.FREIGHT,
+  CODES.RENT,
+  CODES.SALARY,
+  CODES.UTILITIES,
+  CODES.WASTAGE,
+  CODES.DISCOUNT_GIVEN,
+] as const;
