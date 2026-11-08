@@ -48,26 +48,42 @@ export async function createSessionToken(user: SessionUser): Promise<string> {
 
 export async function readSessionToken(
   token: string
-): Promise<SessionUser | null> {
+): Promise<{ id: string } | null> {
   try {
     const { payload } = await jwtVerify(token, authSecret());
-    if (!payload.sub || typeof payload.email !== "string") return null;
-    return {
-      id: payload.sub,
-      email: payload.email,
-      name: typeof payload.name === "string" ? payload.name : "",
-      role: payload.role === "ADMIN" ? "ADMIN" : "USER",
-    };
+    if (!payload.sub) return null;
+    return { id: payload.sub };
   } catch {
     return null;
   }
 }
 
+/** Resolve session from JWT, then re-check role/isActive against Postgres. */
 export async function getSession(): Promise<SessionUser | null> {
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
   if (!token) return null;
-  return readSessionToken(token);
+
+  let secretOk = true;
+  try {
+    authSecret();
+  } catch {
+    secretOk = false;
+  }
+  if (!secretOk) return null;
+
+  const parsed = await readSessionToken(token);
+  if (!parsed) return null;
+
+  const user = await prisma.user.findUnique({ where: { id: parsed.id } });
+  if (!user || !user.isActive) return null;
+
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+  };
 }
 
 export async function requireSession(): Promise<SessionUser> {

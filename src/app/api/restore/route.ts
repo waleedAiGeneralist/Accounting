@@ -80,9 +80,25 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "No file" }, { status: 400 });
   }
 
+  const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+  if (typeof file.size === "number" && file.size > MAX_BYTES) {
+    return NextResponse.json(
+      { error: "Backup too large (max 5 MB)" },
+      { status: 413 }
+    );
+  }
+
+  const text = await file.text();
+  if (text.length > MAX_BYTES) {
+    return NextResponse.json(
+      { error: "Backup too large (max 5 MB)" },
+      { status: 413 }
+    );
+  }
+
   let data: BackupPayload;
   try {
-    data = JSON.parse(await file.text()) as BackupPayload;
+    data = JSON.parse(text) as BackupPayload;
   } catch {
     return NextResponse.json({ error: "Invalid JSON backup" }, { status: 400 });
   }

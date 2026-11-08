@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build && node scripts/migrate.mjs && npx tsx scripts/ensure-seed.ts && npx tsx scripts/seed-users.ts",
-    "start": "next start",
+    "start": "node scripts/migrate.mjs && npx tsx scripts/ensure-seed.ts && npx tsx scripts/seed-users.ts && next start",
     "lint": "eslint",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",

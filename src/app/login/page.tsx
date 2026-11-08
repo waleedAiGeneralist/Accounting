@@ -1,12 +1,21 @@
 import { LoginForm } from "@/components/auth/LoginForm";
 import { Tx } from "@/components/i18n/Tx";
 
+export const dynamic = "force-dynamic";
+
 export default async function LoginPage({
   searchParams,
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
-  const sp = await searchParams;
+  let next: string | undefined;
+  try {
+    const sp = await searchParams;
+    next = sp.next;
+  } catch {
+    next = undefined;
+  }
+
   return (
     <div className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col justify-center px-1 py-8">
       <div className="mb-6 text-center">
@@ -18,7 +27,7 @@ export default async function LoginPage({
         </p>
       </div>
       <div className="card-panel">
-        <LoginForm next={sp.next} />
+        <LoginForm next={next} />
       </div>
     </div>
   );

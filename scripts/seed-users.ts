@@ -1,75 +1,27 @@
 /**
- * Upsert admin + shop user from env passwords (never hardcode secrets in repo).
+ * Ensure admin + shop user exist from env passwords (never hardcode secrets).
  *
- * Required env:
- *   AUTH_SECRET
+ * Env:
  *   SEED_ADMIN_EMAIL (default admin@hisabkitab.app)
  *   SEED_ADMIN_PASSWORD
  *   SEED_USER_EMAIL (default Naiz@gamil.com)
  *   SEED_USER_PASSWORD
+ *   SEED_UPDATE_PASSWORDS=1  → reset hashes from env (optional)
  */
 import { config } from "dotenv";
-import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
+import { ensureUsers } from "../src/lib/ensure-users";
 
 config();
 
-const prisma = new PrismaClient();
-
-async function upsertUser(opts: {
-  email: string;
-  name: string;
-  role: "ADMIN" | "USER";
-  password: string;
-}) {
-  const passwordHash = await bcrypt.hash(opts.password, 12);
-  await prisma.user.upsert({
-    where: { email: opts.email.toLowerCase() },
-    update: {
-      name: opts.name,
-      role: opts.role,
-      passwordHash,
-      isActive: true,
-    },
-    create: {
-      email: opts.email.toLowerCase(),
-      name: opts.name,
-      role: opts.role,
-      passwordHash,
-      isActive: true,
-    },
-  });
-  console.log(`seed-users: upserted ${opts.role} ${opts.email}`);
-}
-
-async function main() {
-  const adminEmail = (process.env.SEED_ADMIN_EMAIL || "admin@hisabkitab.app").trim();
-  const adminPassword = process.env.SEED_ADMIN_PASSWORD?.trim();
-  const userEmail = (process.env.SEED_USER_EMAIL || "Naiz@gamil.com").trim();
-  const userPassword = process.env.SEED_USER_PASSWORD?.trim();
-
-  if (!adminPassword || !userPassword) {
-    console.log("seed-users: skip (SEED_ADMIN_PASSWORD / SEED_USER_PASSWORD not set)");
-    return;
-  }
-
-  await upsertUser({
-    email: adminEmail,
-    name: "Admin",
-    role: "ADMIN",
-    password: adminPassword,
-  });
-  await upsertUser({
-    email: userEmail,
-    name: "Naiz",
-    role: "USER",
-    password: userPassword,
-  });
-}
-
-main()
+ensureUsers()
+  .then((r) => {
+    console.log("seed-users: done", r);
+  })
   .catch((e) => {
     console.error(e);
     process.exit(1);
   })
-  .finally(() => prisma.$disconnect());
+  .finally(async () => {
+    const { prisma } = await import("../src/lib/prisma");
+    await prisma.$disconnect();
+  });
