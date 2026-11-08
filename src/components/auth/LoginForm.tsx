@@ -1,11 +1,13 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { loginAction } from "@/app/actions/auth";
 import { FormField, Input, Button } from "@/components/ui/FormField";
 import { Flash } from "@/components/vouchers/Flash";
 
 export function LoginForm({ next }: { next?: string }) {
+  const router = useRouter();
   const [pending, start] = useTransition();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,9 +19,21 @@ export function LoginForm({ next }: { next?: string }) {
       onSubmit={(e) => {
         e.preventDefault();
         setError(null);
-        start(async () => {
-          const res = await loginAction({ email, password, next });
-          if (res && !res.ok) setError(res.error);
+        start(() => {
+          void (async () => {
+            try {
+              const res = await loginAction({ email, password, next });
+              if (!res.ok) {
+                setError(res.error);
+                return;
+              }
+              router.replace(res.redirectTo);
+              router.refresh();
+            } catch (err) {
+              console.error(err);
+              setError("Login failed — please try again");
+            }
+          })();
         });
       }}
     >
