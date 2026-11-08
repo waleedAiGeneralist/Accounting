@@ -83,7 +83,7 @@ export default function RootLayout({
             <Nav />
             <main className="page-main">{children}</main>
             <footer className="no-print border-t border-[var(--border)] px-[var(--page-pad-x)] py-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-center text-xs text-[var(--muted)]">
-              <Tx k="appName" /> · <Tx k="localFirst" /> · v1
+              <Tx k="appName" /> · secured · v1
             </footer>
           </div>
         </PreferencesProvider>
