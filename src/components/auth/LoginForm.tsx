@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { loginAction } from "@/app/actions/auth";
 import { FormField, Input, Button } from "@/components/ui/FormField";
 import { Flash } from "@/components/vouchers/Flash";
 
@@ -22,12 +21,24 @@ export function LoginForm({ next }: { next?: string }) {
         start(() => {
           void (async () => {
             try {
-              const res = await loginAction({ email, password, next });
-              if (!res.ok) {
-                setError(res.error);
+              const res = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password, next }),
+              });
+              const data = (await res.json().catch(() => null)) as
+                | { ok: true; redirectTo: string }
+                | { ok: false; error: string }
+                | null;
+              if (!data || !data.ok) {
+                setError(
+                  data && "error" in data
+                    ? data.error
+                    : "Login failed — please try again"
+                );
                 return;
               }
-              router.replace(res.redirectTo);
+              router.replace(data.redirectTo);
               router.refresh();
             } catch (err) {
               console.error(err);

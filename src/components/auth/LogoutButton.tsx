@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { logoutAction } from "@/app/actions/auth";
 
 export function LogoutButton({ label = "Logout" }: { label?: string }) {
   const router = useRouter();
@@ -16,7 +15,7 @@ export function LogoutButton({ label = "Logout" }: { label?: string }) {
       onClick={() => {
         start(() => {
           void (async () => {
-            await logoutAction();
+            await fetch("/api/auth/logout", { method: "POST" });
             router.replace("/login");
             router.refresh();
           })();
