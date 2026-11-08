@@ -18,4 +18,8 @@ const result = spawnSync("npx", ["prisma", "migrate", "deploy"], {
   stdio: "inherit",
   env: process.env,
 });
-process.exit(result.status ?? 1);
+const code = result.status ?? 1;
+if (code !== 0) {
+  console.error("migrate: deploy failed");
+}
+process.exit(code);

@@ -4,13 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build && node scripts/migrate.mjs && npx tsx scripts/ensure-seed.ts && npx tsx scripts/seed-users.ts",
-    "start": "node scripts/migrate.mjs && npx tsx scripts/ensure-seed.ts && npx tsx scripts/seed-users.ts && next start",
+    "build": "prisma generate && next build",
+    "start": "node scripts/db-setup.mjs && next start",
     "lint": "eslint",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts && tsx scripts/seed-users.ts",
+    "db:setup": "STRICT_DB_SETUP=1 node scripts/db-setup.mjs",
     "db:reset": "prisma migrate reset --force",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate",
@@ -23,8 +24,10 @@
     "dotenv": "^18.0.9",
     "jose": "^6.2.15",
     "next": "16.4.5",
+    "prisma": "^6.19.3",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "tsx": "^4.23.15",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -35,9 +38,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.5",
-    "prisma": "^6.19.3",
     "tailwindcss": "^4",
-    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }

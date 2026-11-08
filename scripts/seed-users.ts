@@ -6,22 +6,23 @@
  *   SEED_ADMIN_PASSWORD
  *   SEED_USER_EMAIL (default Naiz@gamil.com)
  *   SEED_USER_PASSWORD
- *   SEED_UPDATE_PASSWORDS=1  → reset hashes from env (optional)
  */
 import { config } from "dotenv";
 import { ensureUsers } from "../src/lib/ensure-users";
+import { prisma } from "../src/lib/prisma";
 
 config();
 
-ensureUsers()
-  .then((r) => {
+async function main() {
+  try {
+    const r = await ensureUsers();
     console.log("seed-users: done", r);
-  })
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    const { prisma } = await import("../src/lib/prisma");
-    await prisma.$disconnect();
-  });
+  } catch (e) {
+    console.error("seed-users: failed", e);
+    process.exitCode = 1;
+  } finally {
+    await prisma.$disconnect().catch(() => undefined);
+  }
+}
+
+main();
