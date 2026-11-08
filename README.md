@@ -8,9 +8,11 @@ Bilingual labels (English + Urdu). No auth in v1.
 
 ## Setup
 
+Needs **Postgres** (`DATABASE_URL`). Cursor publish-app provisions one automatically.
+
 ```bash
 npm install
-cp .env.example .env
+cp .env.example .env   # set DATABASE_URL to your Postgres
 npx prisma migrate dev
 npm run db:seed
 npm run dev

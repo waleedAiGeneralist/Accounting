@@ -49,7 +49,7 @@ export default async function PartyStatementPage({
         <span>Opening: {formatPKR(opening)}</span>
         <span className="font-semibold">Closing: {formatPKR(closing)}</span>
       </div>
-      <div className="card-panel overflow-x-auto p-0">
+      <div className="card-panel table-scroll p-0">
         <table className="w-full text-sm">
           <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
             <tr>

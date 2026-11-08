@@ -19,7 +19,7 @@ export function PartyForm() {
 
   return (
     <form
-      className="flex flex-col gap-3 sm:flex-row sm:items-end"
+      className="flex flex-col gap-3"
       onSubmit={(e) => {
         e.preventDefault();
         setError(null);
@@ -35,28 +35,28 @@ export function PartyForm() {
         });
       }}
     >
-      <div className="w-full sm:w-auto">
-        <Flash error={error} />
+      <Flash error={error} />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto_auto] lg:items-end">
+        <FormField label={<Tx k="name" />}>
+          <Input value={name} onChange={(e) => setName(e.target.value)} required />
+        </FormField>
+        <FormField label={<Tx k="phone" />}>
+          <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+        </FormField>
+        <FormField label={<Tx k="type" />}>
+          <Select
+            value={type}
+            onChange={(e) => setType(e.target.value as "CUSTOMER" | "SUPPLIER" | "BOTH")}
+          >
+            <option value="CUSTOMER">{t("customer")}</option>
+            <option value="SUPPLIER">{t("supplier")}</option>
+            <option value="BOTH">{t("both")}</option>
+          </Select>
+        </FormField>
+        <Button type="submit" disabled={pending} className="w-full lg:w-auto">
+          {pending ? "…" : t("save")}
+        </Button>
       </div>
-      <FormField label={<Tx k="name" />}>
-        <Input value={name} onChange={(e) => setName(e.target.value)} required />
-      </FormField>
-      <FormField label={<Tx k="phone" />}>
-        <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
-      </FormField>
-      <FormField label={<Tx k="type" />}>
-        <Select
-          value={type}
-          onChange={(e) => setType(e.target.value as "CUSTOMER" | "SUPPLIER" | "BOTH")}
-        >
-          <option value="CUSTOMER">{t("customer")}</option>
-          <option value="SUPPLIER">{t("supplier")}</option>
-          <option value="BOTH">{t("both")}</option>
-        </Select>
-      </FormField>
-      <Button type="submit" disabled={pending}>
-        {pending ? "…" : t("save")}
-      </Button>
     </form>
   );
 }

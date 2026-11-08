@@ -29,20 +29,36 @@ export function DateRangeFilter({
   }
 
   return (
-    <form onSubmit={apply} className="no-print mb-4 flex flex-wrap items-end gap-3">
-      <FormField label={<Tx k="from" />}>
-        <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-      </FormField>
-      <FormField label={<Tx k="to" />}>
-        <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-      </FormField>
-      {extra}
-      <Button type="submit" variant="secondary">
-        {t("apply")}
-      </Button>
-      <Button type="button" variant="ghost" onClick={() => window.print()}>
-        <Tx k="print" />
-      </Button>
+    <form
+      onSubmit={apply}
+      className="no-print mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end"
+    >
+      <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
+        <FormField label={<Tx k="from" />}>
+          <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+        </FormField>
+        <FormField label={<Tx k="to" />}>
+          <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+        </FormField>
+      </div>
+      {extra ? (
+        <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:items-end">
+          {extra}
+        </div>
+      ) : null}
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" variant="secondary" className="flex-1 sm:flex-none">
+          {t("apply")}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          className="flex-1 sm:flex-none"
+          onClick={() => window.print()}
+        >
+          <Tx k="print" />
+        </Button>
+      </div>
     </form>
   );
 }

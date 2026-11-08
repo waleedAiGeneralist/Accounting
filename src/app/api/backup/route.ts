@@ -1,22 +1,39 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
+import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/auth";
 
-function dbPath() {
-  return path.join(/*turbopackIgnore: true*/ process.cwd(), "prisma", "dev.db");
-}
-
+/** Export all ledger data as JSON — admin only. */
 export async function GET() {
-  const file = dbPath();
-  if (!fs.existsSync(file)) {
-    return NextResponse.json({ error: "Database not found" }, { status: 404 });
+  try {
+    await requireAdmin();
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const buf = fs.readFileSync(file);
+
+  const [accounts, parties, stockItems, vouchers] = await Promise.all([
+    prisma.account.findMany(),
+    prisma.party.findMany(),
+    prisma.stockItem.findMany(),
+    prisma.voucher.findMany({
+      include: { lines: true, stockMoves: true },
+      orderBy: { createdAt: "asc" },
+    }),
+  ]);
+
+  const payload = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    accounts,
+    parties,
+    stockItems,
+    vouchers,
+  };
+
   const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
-  return new NextResponse(buf, {
+  return new NextResponse(JSON.stringify(payload, null, 2), {
     headers: {
-      "Content-Type": "application/octet-stream",
-      "Content-Disposition": `attachment; filename="hisab-kitab-${stamp}.db"`,
+      "Content-Type": "application/json",
+      "Content-Disposition": `attachment; filename="hisab-kitab-${stamp}.json"`,
     },
   });
 }

@@ -48,12 +48,12 @@ export function BackupRestore() {
         </a>
         <label className="inline-flex cursor-pointer items-center rounded-md border border-[var(--border)] px-4 py-2 text-sm font-semibold hover:bg-[var(--surface-2)]">
           {busy ? "…" : t("restore")}
-          <input type="file" accept=".db,application/octet-stream" className="hidden" onChange={onRestore} />
+          <input type="file" accept=".json,application/json" className="hidden" onChange={onRestore} />
         </label>
       </div>
       <p className="text-xs text-[var(--muted)]">
-        Download a SQLite backup, or upload a previous `.db` file to restore. A `.bak` copy of the
-        current DB is kept automatically on restore.
+        Download a JSON backup of all accounts, parties, stock, and vouchers — or upload a previous
+        export to restore.
       </p>
     </div>
   );
