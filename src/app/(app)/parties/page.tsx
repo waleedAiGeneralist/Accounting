@@ -1,13 +1,14 @@
+"use client";
+
 import Link from "next/link";
 import { Tx } from "@/components/i18n/Tx";
-import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/PageHeader";
 import { PartyForm } from "@/components/parties/PartyForm";
+import { useDemo } from "@/lib/demo/store";
 
-
-export const dynamic = "force-dynamic";
-export default async function PartiesPage() {
-  const parties = await prisma.party.findMany({ orderBy: { name: "asc" } });
+export default function PartiesPage() {
+  const { state, ready } = useDemo();
+  if (!ready) return null;
 
   return (
     <div>
@@ -26,19 +27,12 @@ export default async function PartiesPage() {
             </tr>
           </thead>
           <tbody>
-            {parties.map((p) => (
+            {state.parties.map((p) => (
               <tr key={p.id} className="border-t border-[var(--border)]">
                 <td className="px-3 py-2 font-medium">{p.name}</td>
                 <td className="px-3 py-2">{p.phone ?? "—"}</td>
                 <td className="px-3 py-2">{p.type}</td>
                 <td className="px-3 py-2">
-                  <Link
-                    className="text-[var(--accent)] hover:underline"
-                    href={`/reports/ledger?partyId=${p.id}`}
-                  >
-                    Ledger
-                  </Link>
-                  {" · "}
                   <Link
                     className="text-[var(--accent)] hover:underline"
                     href={`/parties/${p.id}/statement`}

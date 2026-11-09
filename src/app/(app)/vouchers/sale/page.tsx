@@ -1,21 +1,15 @@
-import { prisma } from "@/lib/prisma";
-import { Tx } from "@/components/i18n/Tx";
+"use client";
+
 import { PageHeader } from "@/components/PageHeader";
 import { SalePurchaseForm } from "@/components/vouchers/SalePurchaseForm";
+import { Tx } from "@/components/i18n/Tx";
 
-
-export const dynamic = "force-dynamic";
-export default async function SalePage() {
-  const [parties, items] = await Promise.all([
-    prisma.party.findMany({ orderBy: { name: "asc" } }),
-    prisma.stockItem.findMany({ orderBy: { name: "asc" } }),
-  ]);
-
+export default function SalePage() {
   return (
     <div>
-      <PageHeader title={<Tx k="sale" />} subtitle="Dr Cash/Receivables · Cr Sale · stock out" />
+      <PageHeader title={<Tx k="sale" />} subtitle="Customer sale entry" />
       <div className="card-panel">
-        <SalePurchaseForm kind="sale" parties={parties} items={items} />
+        <SalePurchaseForm kind="sale" />
       </div>
     </div>
   );

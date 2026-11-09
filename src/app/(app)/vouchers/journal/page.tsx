@@ -1,21 +1,15 @@
-import { prisma } from "@/lib/prisma";
-import { Tx } from "@/components/i18n/Tx";
+"use client";
+
 import { PageHeader } from "@/components/PageHeader";
 import { JournalForm } from "@/components/vouchers/JournalForm";
+import { Tx } from "@/components/i18n/Tx";
 
-
-export const dynamic = "force-dynamic";
-export default async function JournalPage() {
-  const accounts = await prisma.account.findMany({
-    where: { isActive: true },
-    orderBy: { code: "asc" },
-  });
-
+export default function JournalPage() {
   return (
     <div>
-      <PageHeader title={<Tx k="journal" />} subtitle="Manual double-entry (debit must equal credit)" />
+      <PageHeader title={<Tx k="journal" />} subtitle="Manual double-entry" />
       <div className="card-panel">
-        <JournalForm accounts={accounts} />
+        <JournalForm />
       </div>
     </div>
   );

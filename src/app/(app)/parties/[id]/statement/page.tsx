@@ -1,73 +1,75 @@
-import { notFound } from "next/navigation";
-import { Tx } from "@/components/i18n/Tx";
-import { prisma } from "@/lib/prisma";
+"use client";
+
+import { useParams } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
-import { partyLedger } from "@/lib/reports";
-import { formatDate } from "@/lib/dates";
-import { formatPKR } from "@/lib/money";
-import { t } from "@/lib/labels";
-import { WhatsAppShare } from "@/components/parties/WhatsAppShare";
+import { formatPKR, roundMoney } from "@/lib/money";
+import { useDemo } from "@/lib/demo/store";
+import { accountByCode } from "@/lib/demo/compute";
 
-export const dynamic = "force-dynamic";
+export default function PartyStatementPage() {
+  const params = useParams<{ id: string }>();
+  const { state, ready } = useDemo();
+  if (!ready) return null;
+  const party = state.parties.find((p) => p.id === params.id);
+  if (!party) return <div className="card-panel">Party not found</div>;
 
-export default async function PartyStatementPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const party = await prisma.party.findUnique({ where: { id } });
-  if (!party) notFound();
+  const recv = accountByCode(state.accounts, "1003");
+  const pay = accountByCode(state.accounts, "2001");
+  let bal = 0;
+  const lines: Array<{ date: string; narration: string; amount: number }> = [];
+  for (const v of state.vouchers) {
+    if (v.partyId !== party.id) continue;
+    for (const l of v.lines) {
+      if (l.accountId !== recv?.id && l.accountId !== pay?.id) continue;
+      const delta = l.debit - l.credit;
+      bal = roundMoney(bal + delta);
+      lines.push({ date: v.date, narration: v.narration, amount: delta });
+    }
+  }
 
-  const { rows, opening } = await partyLedger(id);
-  const closing = rows.length ? rows[rows.length - 1].balance : opening;
-
-  const text = [
-    `*${t("appName", "en")}*`,
-    `Statement for ${party.name}`,
-    `Opening: ${formatPKR(opening)}`,
-    ...rows.slice(-15).map(
-      (r) =>
-        `${formatDate(r.date)} | Dr ${r.debit || 0} Cr ${r.credit || 0} | Bal ${formatPKR(r.balance)}`
-    ),
-    `*Closing balance: ${formatPKR(closing)}*`,
-  ].join("\n");
-
-  const waPhone = party.phone?.replace(/\D/g, "") ?? "";
-  const waUrl = waPhone
-    ? `https://wa.me/92${waPhone.replace(/^0/, "")}?text=${encodeURIComponent(text)}`
-    : `https://wa.me/?text=${encodeURIComponent(text)}`;
+  const text = encodeURIComponent(
+    `Hisab Kitab statement for ${party.name}\nBalance: ${formatPKR(bal)}\n(Demo preview)`
+  );
+  const wa = party.phone
+    ? `https://wa.me/92${party.phone.replace(/\D/g, "").replace(/^0/, "")}?text=${text}`
+    : null;
 
   return (
-    <div>
+    <div className="space-y-4">
       <PageHeader
-        title={`${party.name} — Statement`}
-        subtitle={<Tx k="whatsapp" />}
-        actions={<WhatsAppShare url={waUrl} />}
+        title={party.name}
+        subtitle="Party statement"
+        actions={
+          wa ? (
+            <a
+              href={wa}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-semibold text-white"
+            >
+              WhatsApp
+            </a>
+          ) : null
+        }
       />
-      <div className="card-panel mb-4 flex justify-between text-sm">
-        <span>Opening: {formatPKR(opening)}</span>
-        <span className="font-semibold">Closing: {formatPKR(closing)}</span>
+      <div className="card-panel text-sm">
+        Balance: <strong className="tabular-nums">{formatPKR(bal)}</strong>
       </div>
       <div className="card-panel table-scroll p-0">
         <table className="w-full text-sm">
           <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
             <tr>
-              <th className="px-3 py-2"><Tx k="date" /></th>
-              <th className="px-3 py-2"><Tx k="narration" /></th>
-              <th className="px-3 py-2 text-right"><Tx k="debit" /></th>
-              <th className="px-3 py-2 text-right"><Tx k="credit" /></th>
-              <th className="px-3 py-2 text-right">Bal</th>
+              <th className="px-3 py-2">Date</th>
+              <th className="px-3 py-2">Narration</th>
+              <th className="px-3 py-2">Amount</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
-              <tr key={`${r.voucherId}-${r.balance}`} className="border-t border-[var(--border)]">
-                <td className="px-3 py-2">{formatDate(r.date)}</td>
-                <td className="px-3 py-2">{r.narration}</td>
-                <td className="px-3 py-2 text-right">{r.debit ? formatPKR(r.debit) : ""}</td>
-                <td className="px-3 py-2 text-right">{r.credit ? formatPKR(r.credit) : ""}</td>
-                <td className="px-3 py-2 text-right">{formatPKR(r.balance)}</td>
+            {lines.map((l, i) => (
+              <tr key={i} className="border-t border-[var(--border)]">
+                <td className="px-3 py-2">{l.date}</td>
+                <td className="px-3 py-2">{l.narration}</td>
+                <td className="px-3 py-2 tabular-nums">{formatPKR(l.amount)}</td>
               </tr>
             ))}
           </tbody>

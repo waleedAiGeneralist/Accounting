@@ -1,111 +1,70 @@
+"use client";
+
+import { Suspense, useMemo } from "react";
 import Link from "next/link";
-import { Tx } from "@/components/i18n/Tx";
-import { prisma } from "@/lib/prisma";
+import { useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
-import { formatDate } from "@/lib/dates";
-import { formatPKR } from "@/lib/money";
+import { useDemo } from "@/lib/demo/store";
 
+function SearchInner() {
+  const sp = useSearchParams();
+  const q = (sp.get("q") || "").trim().toLowerCase();
+  const { state, ready } = useDemo();
+  const hits = useMemo(() => {
+    if (!q) return { parties: [], stock: [], vouchers: [] };
+    return {
+      parties: state.parties.filter(
+        (p) => p.name.toLowerCase().includes(q) || (p.phone || "").includes(q)
+      ),
+      stock: state.stockItems.filter((s) => s.name.toLowerCase().includes(q)),
+      vouchers: state.vouchers.filter((v) => v.narration.toLowerCase().includes(q)),
+    };
+  }, [q, state]);
 
-export const dynamic = "force-dynamic";
-export default async function SearchPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ q?: string }>;
-}) {
-  const { q = "" } = await searchParams;
-  const query = q.trim();
-
-  const [parties, vouchers, items, accounts] = query
-    ? await Promise.all([
-        prisma.party.findMany({
-          where: {
-            OR: [
-              { name: { contains: query } },
-              { phone: { contains: query } },
-            ],
-          },
-          take: 20,
-        }),
-        prisma.voucher.findMany({
-          where: { narration: { contains: query } },
-          include: { party: true, lines: true },
-          take: 20,
-          orderBy: { date: "desc" },
-        }),
-        prisma.stockItem.findMany({
-          where: { name: { contains: query } },
-          take: 20,
-        }),
-        prisma.account.findMany({
-          where: {
-            OR: [
-              { name: { contains: query } },
-              { nameUrdu: { contains: query } },
-              { code: { contains: query } },
-            ],
-          },
-          take: 20,
-        }),
-      ])
-    : [[], [], [], []];
+  if (!ready) return null;
 
   return (
-    <div>
-      <PageHeader title={<Tx k="search" />} subtitle={query ? `Results for “${query}”` : "Type in the nav search"} />
-      {!query ? (
-        <p className="text-[var(--muted)]">Enter a party, voucher narration, item, or account.</p>
-      ) : (
-        <div className="space-y-6">
-          <ResultBlock title={<Tx k="parties" />}>
-            {parties.map((p) => (
-              <li key={p.id}>
-                <Link href={`/parties/${p.id}/statement`} className="text-[var(--accent)] hover:underline">
-                  {p.name}
-                </Link>{" "}
-                <span className="text-[var(--muted)]">{p.phone}</span>
-              </li>
-            ))}
-          </ResultBlock>
-          <ResultBlock title={<Tx k="vouchers" />}>
-            {vouchers.map((v) => (
-              <li key={v.id}>
-                <Link href={`/vouchers/${v.id}`} className="text-[var(--accent)] hover:underline">
-                  {formatDate(v.date)}
-                </Link>{" "}
-                {v.narration} — {formatPKR(v.lines.reduce((s, l) => s + l.debit, 0))}
-              </li>
-            ))}
-          </ResultBlock>
-          <ResultBlock title={<Tx k="stock" />}>
-            {items.map((i) => (
-              <li key={i.id}>
-                {i.name} [{i.category}]
-              </li>
-            ))}
-          </ResultBlock>
-          <ResultBlock title={<Tx k="accounts" />}>
-            {accounts.map((a) => (
-              <li key={a.id}>
-                <Link
-                  href={`/reports/ledger?accountId=${a.id}`}
-                  className="text-[var(--accent)] hover:underline"
-                >
-                  {a.code} {a.name}
-                </Link>
-              </li>
-            ))}
-          </ResultBlock>
-        </div>
-      )}
+    <div className="space-y-4">
+      <PageHeader title="Search" subtitle={q ? `Results for “${q}”` : "Type in the nav search"} />
+      <div className="card-panel">
+        <h3 className="mb-2 font-semibold">Parties</h3>
+        <ul className="space-y-1 text-sm">
+          {hits.parties.map((p) => (
+            <li key={p.id}>{p.name}</li>
+          ))}
+          {!hits.parties.length ? <li className="text-[var(--muted)]">None</li> : null}
+        </ul>
+      </div>
+      <div className="card-panel">
+        <h3 className="mb-2 font-semibold">Stock</h3>
+        <ul className="space-y-1 text-sm">
+          {hits.stock.map((s) => (
+            <li key={s.id}>{s.name}</li>
+          ))}
+          {!hits.stock.length ? <li className="text-[var(--muted)]">None</li> : null}
+        </ul>
+      </div>
+      <div className="card-panel">
+        <h3 className="mb-2 font-semibold">Vouchers</h3>
+        <ul className="space-y-1 text-sm">
+          {hits.vouchers.map((v) => (
+            <li key={v.id}>
+              <Link className="text-[var(--accent)] hover:underline" href={`/vouchers/${v.id}`}>
+                {v.date} — {v.narration}
+              </Link>
+            </li>
+          ))}
+          {!hits.vouchers.length ? <li className="text-[var(--muted)]">None</li> : null}
+        </ul>
+      </div>
     </div>
   );
 }
 
-function ResultBlock({ title, children }: { title: React.ReactNode; children: React.ReactNode }) {
+export default function SearchPage() {
   return (
-    <div className="card-panel">
-      <h2 className="mb-2 font-display font-semibold text-[var(--accent)]">{title}</h2>
-      <ul className="space-y-1 text-sm">{children}</ul>
-    </div>
+    <Suspense fallback={<div className="p-4 text-sm text-[var(--muted)]">Loading…</div>}>
+      <SearchInner />
+    </Suspense>
   );
 }

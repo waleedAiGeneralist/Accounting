@@ -1,77 +1,42 @@
-import { Suspense } from "react";
-import { Tx } from "@/components/i18n/Tx";
-import Link from "next/link";
+"use client";
+
 import { PageHeader } from "@/components/PageHeader";
-import { DateRangeFilter } from "@/components/reports/DateRangeFilter";
-import { ExportCsvButton } from "@/components/reports/ExportCsvButton";
-import { cashBook } from "@/lib/reports";
-import { formatDate, todayISO } from "@/lib/dates";
 import { formatPKR } from "@/lib/money";
+import { useDemo } from "@/lib/demo/store";
+import { accountByCode } from "@/lib/demo/compute";
 
-
-export const dynamic = "force-dynamic";
-export default async function CashBookPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ from?: string; to?: string }>;
-}) {
-  const sp = await searchParams;
-  const from = sp.from ?? todayISO();
-  const to = sp.to ?? todayISO();
-  const data = await cashBook(from, to);
-  const csv = [
-    ["Date", "Narration", "Debit", "Credit", "Balance"],
-    ...data.rows.map((r) => [
-      formatDate(r.date),
-      r.narration,
-      String(r.debit),
-      String(r.credit),
-      String(r.balance),
-    ]),
-  ];
+export default function CashBookPage() {
+  const { state, ready } = useDemo();
+  if (!ready) return null;
+  const cash = accountByCode(state.accounts, "1001");
+  const rows = state.vouchers
+    .flatMap((v) =>
+      v.lines
+        .filter((l) => l.accountId === cash?.id)
+        .map((l) => ({ v, l }))
+    )
+    .sort((a, b) => a.v.date.localeCompare(b.v.date));
 
   return (
     <div>
-      <PageHeader title={<Tx k="cashBook" />} subtitle={`${from} → ${to}`} />
-      <Suspense>
-        <DateRangeFilter />
-      </Suspense>
-      <div className="mb-3 no-print">
-        <ExportCsvButton filename="cash-book.csv" rows={csv} />
-      </div>
+      <PageHeader title="Cash book" subtitle="Cash in hand movements" />
       <div className="card-panel table-scroll p-0">
         <table className="w-full text-sm">
           <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
             <tr>
-              <th className="px-3 py-2"><Tx k="date" /></th>
-              <th className="px-3 py-2"><Tx k="narration" /></th>
-              <th className="px-3 py-2 text-right">In</th>
-              <th className="px-3 py-2 text-right">Out</th>
-              <th className="px-3 py-2 text-right">Balance</th>
+              <th className="px-3 py-2">Date</th>
+              <th className="px-3 py-2">Narration</th>
+              <th className="px-3 py-2">In</th>
+              <th className="px-3 py-2">Out</th>
             </tr>
           </thead>
           <tbody>
-            <tr className="border-t border-[var(--border)] text-[var(--muted)]">
-              <td className="px-3 py-2" colSpan={4}>
-                Opening
-              </td>
-              <td className="px-3 py-2 text-right">{formatPKR(data.opening)}</td>
-            </tr>
-            {data.rows.map((r) => (
-              <tr key={`${r.voucherId}-${r.balance}`} className="border-t border-[var(--border)]">
-                <td className="px-3 py-2">
-                  <Link href={`/vouchers/${r.voucherId}`} className="text-[var(--accent)] hover:underline">
-                    {formatDate(r.date)}
-                  </Link>
-                </td>
-                <td className="px-3 py-2">{r.narration}</td>
-                <td className="px-3 py-2 text-right tabular-nums">
-                  {r.debit ? formatPKR(r.debit) : ""}
-                </td>
-                <td className="px-3 py-2 text-right tabular-nums">
-                  {r.credit ? formatPKR(r.credit) : ""}
-                </td>
-                <td className="px-3 py-2 text-right tabular-nums">{formatPKR(r.balance)}</td>
+            {rows.map(({ v, l }) => (
+              <tr key={l.id} className="border-t border-[var(--border)]">
+                <td className="px-3 py-2">{v.date}</td>
+                <td className="px-3 py-2">{v.narration}</td>
+                <td className="px-3 py-2 tabular-nums">{l.debit ? formatPKR(l.debit) : ""}</td>
+                <td className="px-3 py-2 tabular-nums">{l.credit ? formatPKR(l.credit) : ""}</td>
               </tr>
             ))}
           </tbody>

@@ -1,86 +1,65 @@
-import { Suspense } from "react";
-import { Tx } from "@/components/i18n/Tx";
+"use client";
+
 import { PageHeader } from "@/components/PageHeader";
-import { DateRangeFilter } from "@/components/reports/DateRangeFilter";
-import { ExportCsvButton } from "@/components/reports/ExportCsvButton";
-import { balanceSheet } from "@/lib/reports";
-import { formatPKR } from "@/lib/money";
+import { formatPKR, roundMoney } from "@/lib/money";
+import { useDemo } from "@/lib/demo/store";
 
+export default function BalanceSheetPage() {
+  const { state, ready } = useDemo();
+  if (!ready) return null;
 
-export const dynamic = "force-dynamic";
-function Section({
-  title,
-  rows,
-  total,
-}: {
-  title: string;
-  rows: { code: string; name: string; nameUrdu: string; amount: number }[];
-  total: number;
-}) {
-  return (
-    <div className="card-panel">
-      <h2 className="mb-3 font-display text-lg font-semibold text-[var(--accent)]">{title}</h2>
-      <ul className="space-y-2 text-sm">
-        {rows.map((r) => (
-          <li key={r.code + r.name} className="flex justify-between gap-2">
-            <span>
-              {r.code} {r.name}{" "}
-              <span className="urdu text-[var(--muted)]">({r.nameUrdu})</span>
-            </span>
-            <span className="tabular-nums">{formatPKR(r.amount)}</span>
-          </li>
-        ))}
-        <li className="flex justify-between border-t border-[var(--border)] pt-2 font-semibold">
-          <span><Tx k="total" /></span>
-          <span>{formatPKR(total)}</span>
-        </li>
-      </ul>
-    </div>
-  );
-}
+  const bal = (id: string) => {
+    let b = 0;
+    for (const v of state.vouchers) {
+      for (const l of v.lines) {
+        if (l.accountId === id) b += l.debit - l.credit;
+      }
+    }
+    return roundMoney(b);
+  };
 
-export default async function BalanceSheetPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ to?: string; from?: string }>;
-}) {
-  const sp = await searchParams;
-  const data = await balanceSheet(sp.to);
-  const csv = [
-    ["Section", "Code", "Name", "Amount"],
-    ...data.assets.map((r) => ["Asset", r.code, r.name, String(r.amount)]),
-    ...data.liabilities.map((r) => ["Liability", r.code, r.name, String(r.amount)]),
-    ...data.equity.map((r) => ["Equity", r.code, r.name, String(r.amount)]),
-  ];
+  const section = (type: "ASSET" | "LIABILITY" | "EQUITY") =>
+    state.accounts
+      .filter((a) => a.type === type)
+      .map((a) => ({ a, b: bal(a.id) }))
+      .filter((x) => x.b !== 0);
+
+  const assets = section("ASSET");
+  const liabilities = section("LIABILITY").map((x) => ({ ...x, b: -x.b }));
+  const equity = section("EQUITY").map((x) => ({ ...x, b: -x.b }));
+
+  const sum = (rows: { b: number }[]) => roundMoney(rows.reduce((s, r) => s + r.b, 0));
 
   return (
-    <div>
-      <PageHeader title={<Tx k="balanceSheet" />} subtitle={sp.to ? `As of ${sp.to}` : "As of today"} />
-      <Suspense>
-        <DateRangeFilter />
-      </Suspense>
-      <div className="mb-3 no-print">
-        <ExportCsvButton filename="balance-sheet.csv" rows={csv} />
-      </div>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Section title="Assets (اثاثے)" rows={data.assets} total={data.totalAssets} />
-        <div className="space-y-4">
-          <Section
-            title="Liabilities (واجبات)"
-            rows={data.liabilities}
-            total={data.liabilities.reduce((s, r) => s + r.amount, 0)}
-          />
-          <Section
-            title="Equity (سرمایہ)"
-            rows={data.equity}
-            total={data.equity.reduce((s, r) => s + r.amount, 0)}
-          />
-          <div className="card-panel flex justify-between font-semibold">
-            <span>Liabilities + Equity</span>
-            <span className="tabular-nums">{formatPKR(data.totalLiabEquity)}</span>
+    <div className="space-y-4">
+      <PageHeader title="Balance Sheet" subtitle="Demo snapshot" />
+      {[
+        ["Assets", assets],
+        ["Liabilities", liabilities],
+        ["Equity", equity],
+      ].map(([title, rows]) => (
+        <div key={title as string} className="card-panel table-scroll p-0">
+          <div className="border-b border-[var(--border)] px-3 py-2 font-display font-semibold">
+            {title as string}
           </div>
+          <table className="w-full text-sm">
+            <tbody>
+              {(rows as { a: { id: string; name: string }; b: number }[]).map((r) => (
+                <tr key={r.a.id} className="border-t border-[var(--border)]">
+                  <td className="px-3 py-2">{r.a.name}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">{formatPKR(r.b)}</td>
+                </tr>
+              ))}
+              <tr className="border-t border-[var(--border)] font-semibold">
+                <td className="px-3 py-2">Total</td>
+                <td className="px-3 py-2 text-right tabular-nums">
+                  {formatPKR(sum(rows as { b: number }[]))}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-      </div>
+      ))}
     </div>
   );
 }

@@ -1,40 +1,31 @@
-import { prisma } from "@/lib/prisma";
+"use client";
+
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { CashForm } from "@/components/vouchers/CashForm";
 import { Tx } from "@/components/i18n/Tx";
-import { CODES } from "@/lib/accounts";
 
-export const dynamic = "force-dynamic";
-
-export default async function CashVoucherPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ kind?: string }>;
-}) {
-  const sp = await searchParams;
-  const kind = sp.kind === "payment" ? "payment" : "receipt";
-
-  const [parties, accounts] = await Promise.all([
-    prisma.party.findMany({ orderBy: { name: "asc" } }),
-    prisma.account.findMany({
-      where: {
-        isActive: true,
-        isSystem: false,
-        code: { notIn: [CODES.CASH, CODES.BANK] },
-      },
-      orderBy: { code: "asc" },
-    }),
-  ]);
-
+function CashInner() {
+  const sp = useSearchParams();
+  const kind = sp.get("kind") === "payment" ? "payment" : "receipt";
   return (
     <div>
       <PageHeader
         title={kind === "receipt" ? <Tx k="cashReceipt" /> : <Tx k="cashPayment" />}
-        subtitle="Auto-posts Dr/Cr against Cash or Bank"
+        subtitle="Posts against Cash or Bank"
       />
       <div className="card-panel">
-        <CashForm kind={kind} parties={parties} accounts={accounts} />
+        <CashForm kind={kind} />
       </div>
     </div>
+  );
+}
+
+export default function CashVoucherPage() {
+  return (
+    <Suspense fallback={<div className="p-4 text-sm text-[var(--muted)]">Loading…</div>}>
+      <CashInner />
+    </Suspense>
   );
 }

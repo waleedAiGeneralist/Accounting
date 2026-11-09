@@ -1,23 +1,21 @@
+"use client";
+
 import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 import { Tx } from "@/components/i18n/Tx";
-import { TableScroll } from "@/components/ui/TableScroll";
-import { dashboardStats } from "@/lib/reports";
 import { formatPKR } from "@/lib/money";
-import { prisma } from "@/lib/prisma";
-import { formatDate } from "@/lib/dates";
+import { useDemo } from "@/lib/demo/store";
+import { dashboardStats, recentVouchers } from "@/lib/demo/compute";
 
-export const dynamic = "force-dynamic";
-
-export default async function DashboardPage() {
-  const [stats, recent] = await Promise.all([
-    dashboardStats(),
-    prisma.voucher.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 8,
-      include: { party: true, lines: true },
-    }),
-  ]);
+export default function DashboardPage() {
+  const { state, ready } = useDemo();
+  if (!ready) {
+    return <div className="p-6 text-sm text-[var(--muted)]">Loading demo…</div>;
+  }
+  const stats = dashboardStats(state);
+  const recent = recentVouchers(state);
+  const partyName = (id: string | null) =>
+    state.parties.find((p) => p.id === id)?.name ?? "—";
 
   const cards = [
     { key: "todaySales" as const, value: stats.todaySales },
@@ -31,7 +29,11 @@ export default async function DashboardPage() {
     <div className="min-w-0">
       <PageHeader
         title={<Tx k="appName" />}
-        subtitle={<Tx k="shop" />}
+        subtitle={
+          <span>
+            <Tx k="shop" /> · client demo (browser data)
+          </span>
+        }
         actions={
           <>
             <Link
@@ -78,76 +80,37 @@ export default async function DashboardPage() {
       <div className="card-panel p-0">
         <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] px-3 py-2">
           <h2 className="font-display text-sm font-semibold sm:text-base">
-            <Tx k="recentVouchers" />
+            Recent vouchers
           </h2>
-          <Link href="/vouchers" className="shrink-0 text-sm text-[var(--accent)] hover:underline">
-            <Tx k="viewAll" />
+          <Link href="/vouchers" className="text-xs text-[var(--accent)] hover:underline">
+            View all
           </Link>
         </div>
-
-        {/* Mobile cards */}
-        <div className="mobile-stack p-3">
-          {recent.map((v) => (
-            <Link
-              key={v.id}
-              href={`/vouchers/${v.id}`}
-              className="rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-3 py-3"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="font-semibold text-[var(--accent)]">{formatDate(v.date)}</div>
-                  <div className="mt-0.5 text-xs text-[var(--muted)]">{v.type}</div>
-                  <div className="mt-1 truncate text-sm">{v.party?.name ?? "—"}</div>
-                  <div className="mt-0.5 line-clamp-2 text-xs text-[var(--muted)]">{v.narration}</div>
-                </div>
-                <div className="shrink-0 font-semibold tabular-nums">
-                  {formatPKR(v.lines.reduce((s, l) => s + l.debit, 0))}
-                </div>
-              </div>
-            </Link>
-          ))}
-          {recent.length === 0 ? (
-            <p className="px-1 py-6 text-center text-sm text-[var(--muted)]">
-              No activity yet — post opening capital via Journal, then try a Sale.
-            </p>
-          ) : null}
-        </div>
-
-        {/* Desktop table */}
-        <div className="desktop-only-table">
-          <TableScroll>
-            <table className="w-full text-sm">
-              <tbody>
-                {recent.map((v) => (
-                  <tr key={v.id} className="border-t border-[var(--border)]">
-                    <td className="px-3 py-2">
-                      <Link
-                        href={`/vouchers/${v.id}`}
-                        className="text-[var(--accent)] hover:underline"
-                      >
-                        {formatDate(v.date)}
-                      </Link>
-                    </td>
-                    <td className="px-3 py-2">{v.type}</td>
-                    <td className="px-3 py-2">{v.party?.name ?? "—"}</td>
-                    <td className="wrap max-w-xs truncate px-3 py-2 text-[var(--muted)]">
-                      {v.narration}
-                    </td>
-                    <td className="px-3 py-2 text-right tabular-nums">
-                      {formatPKR(v.lines.reduce((s, l) => s + l.debit, 0))}
-                    </td>
-                  </tr>
-                ))}
-                {recent.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-3 py-8 text-center text-[var(--muted)]">
-                      No activity yet — post opening capital via Journal, then try a Sale.
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </TableScroll>
+        <div className="table-scroll">
+          <table className="w-full text-sm">
+            <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
+              <tr>
+                <th className="px-3 py-2">Date</th>
+                <th className="px-3 py-2">Type</th>
+                <th className="px-3 py-2">Party</th>
+                <th className="px-3 py-2">Narration</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recent.map((v) => (
+                <tr key={v.id} className="border-t border-[var(--border)]">
+                  <td className="px-3 py-2">{v.date}</td>
+                  <td className="px-3 py-2">
+                    <Link className="text-[var(--accent)] hover:underline" href={`/vouchers/${v.id}`}>
+                      {v.type}
+                    </Link>
+                  </td>
+                  <td className="px-3 py-2">{partyName(v.partyId)}</td>
+                  <td className="px-3 py-2">{v.narration}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

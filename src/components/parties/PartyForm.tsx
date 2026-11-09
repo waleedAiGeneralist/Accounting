@@ -1,61 +1,50 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { createParty } from "@/app/actions/vouchers";
+import { useState } from "react";
 import { FormField, Input, Select, Button } from "@/components/ui/FormField";
 import { Flash } from "@/components/vouchers/Flash";
-import { Tx } from "@/components/i18n/Tx";
-import { usePrefs } from "@/components/prefs/PreferencesProvider";
+import { useDemo } from "@/lib/demo/store";
+import type { PartyType } from "@/lib/demo/types";
 
 export function PartyForm() {
-  const router = useRouter();
-  const { t } = usePrefs();
-  const [pending, start] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const { addParty } = useDemo();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [type, setType] = useState<"CUSTOMER" | "SUPPLIER" | "BOTH">("CUSTOMER");
+  const [type, setType] = useState<PartyType>("CUSTOMER");
+  const [msg, setMsg] = useState<string | null>(null);
 
   return (
     <form
-      className="flex flex-col gap-3"
+      className="grid gap-3 sm:grid-cols-4"
       onSubmit={(e) => {
         e.preventDefault();
-        setError(null);
-        start(async () => {
-          const res = await createParty({ name, phone, type });
-          if (!res.ok) {
-            setError(res.error);
-            return;
-          }
-          setName("");
-          setPhone("");
-          router.refresh();
-        });
+        if (!name.trim()) return;
+        addParty({ name, phone, type });
+        setName("");
+        setPhone("");
+        setMsg("Party added");
       }}
     >
-      <Flash error={error} />
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto_auto] lg:items-end">
-        <FormField label={<Tx k="name" />}>
-          <Input value={name} onChange={(e) => setName(e.target.value)} required />
-        </FormField>
-        <FormField label={<Tx k="phone" />}>
-          <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
-        </FormField>
-        <FormField label={<Tx k="type" />}>
-          <Select
-            value={type}
-            onChange={(e) => setType(e.target.value as "CUSTOMER" | "SUPPLIER" | "BOTH")}
-          >
-            <option value="CUSTOMER">{t("customer")}</option>
-            <option value="SUPPLIER">{t("supplier")}</option>
-            <option value="BOTH">{t("both")}</option>
-          </Select>
-        </FormField>
-        <Button type="submit" disabled={pending} className="w-full lg:w-auto">
-          {pending ? "…" : t("save")}
+      <FormField label="Name">
+        <Input value={name} onChange={(e) => setName(e.target.value)} required />
+      </FormField>
+      <FormField label="Phone">
+        <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+      </FormField>
+      <FormField label="Type">
+        <Select value={type} onChange={(e) => setType(e.target.value as PartyType)}>
+          <option value="CUSTOMER">Customer</option>
+          <option value="SUPPLIER">Supplier</option>
+          <option value="BOTH">Both</option>
+        </Select>
+      </FormField>
+      <div className="flex items-end">
+        <Button type="submit" className="w-full">
+          Add party
         </Button>
+      </div>
+      <div className="sm:col-span-4">
+        <Flash success={msg} />
       </div>
     </form>
   );

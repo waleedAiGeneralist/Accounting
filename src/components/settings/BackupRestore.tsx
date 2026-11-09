@@ -4,76 +4,60 @@ import { useState } from "react";
 import { Flash } from "@/components/vouchers/Flash";
 import { Tx } from "@/components/i18n/Tx";
 import { usePrefs } from "@/components/prefs/PreferencesProvider";
+import { useDemo } from "@/lib/demo/store";
 
 export function BackupRestore() {
   const { t } = usePrefs();
+  const { exportJson, importJson, resetDemo } = useDemo();
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
 
-  async function onBackup() {
-    setBusy(true);
-    setError(null);
-    setMsg(null);
-    try {
-      const res = await fetch("/api/backup", { method: "POST" });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Backup failed");
-      }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "hisab-kitab-backup.json";
-      a.click();
-      URL.revokeObjectURL(url);
-      setMsg("Backup downloaded.");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Backup failed");
-    } finally {
-      setBusy(false);
-    }
+  function onBackup() {
+    const blob = new Blob([exportJson()], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "hisab-kitab-demo-backup.json";
+    a.click();
+    URL.revokeObjectURL(url);
+    setMsg("Backup downloaded (browser storage).");
   }
 
   async function onRestore(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!confirm("Restore will replace the current database. Continue?")) return;
-    setBusy(true);
     setError(null);
     setMsg(null);
     try {
-      const body = new FormData();
-      body.append("file", file);
-      const res = await fetch("/api/restore", { method: "POST", body });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Restore failed");
-      setMsg("Database restored. Reloading…");
-      setTimeout(() => window.location.reload(), 800);
+      const text = await file.text();
+      const res = importJson(text);
+      if (!res.ok) throw new Error(res.error);
+      setMsg("Restored. Reloading…");
+      setTimeout(() => window.location.reload(), 500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Restore failed");
     } finally {
-      setBusy(false);
       e.target.value = "";
     }
   }
 
   return (
     <div className="card-panel space-y-4">
-      <h2 className="font-display text-lg font-semibold">Database (ڈیٹا بیس)</h2>
+      <h2 className="font-display text-lg font-semibold">Demo data</h2>
       <Flash error={error} success={msg} />
+      <p className="text-sm text-[var(--muted)]">
+        This client preview stores data in your browser only — no server database.
+      </p>
       <div className="flex flex-wrap gap-3">
         <button
           type="button"
-          disabled={busy}
-          onClick={() => void onBackup()}
-          className="inline-flex items-center rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] disabled:opacity-60"
+          onClick={onBackup}
+          className="inline-flex items-center rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-hover)]"
         >
-          {busy ? "…" : <Tx k="backup" />}
+          <Tx k="backup" />
         </button>
         <label className="inline-flex cursor-pointer items-center rounded-md border border-[var(--border)] px-4 py-2 text-sm font-semibold hover:bg-[var(--surface-2)]">
-          {busy ? "…" : t("restore")}
+          {t("restore")}
           <input
             type="file"
             accept=".json,application/json"
@@ -81,11 +65,19 @@ export function BackupRestore() {
             onChange={onRestore}
           />
         </label>
+        <button
+          type="button"
+          onClick={() => {
+            if (confirm("Reset to sample demo data?")) {
+              resetDemo();
+              setMsg("Demo data reset.");
+            }
+          }}
+          className="inline-flex items-center rounded-md border border-[var(--border)] px-4 py-2 text-sm font-semibold hover:bg-[var(--surface-2)]"
+        >
+          Reset sample data
+        </button>
       </div>
-      <p className="text-xs text-[var(--muted)]">
-        Download a JSON backup of all accounts, parties, stock, and vouchers — or
-        upload a previous export to restore. Admin only.
-      </p>
     </div>
   );
 }

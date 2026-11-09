@@ -1,90 +1,44 @@
-import { Suspense } from "react";
-import { Tx } from "@/components/i18n/Tx";
+"use client";
+
 import { PageHeader } from "@/components/PageHeader";
-import { DateRangeFilter } from "@/components/reports/DateRangeFilter";
-import { ExportCsvButton } from "@/components/reports/ExportCsvButton";
-import { profitAndLoss } from "@/lib/reports";
 import { formatPKR } from "@/lib/money";
+import { useDemo } from "@/lib/demo/store";
+import { roundMoney } from "@/lib/money";
 
+export default function ProfitLossPage() {
+  const { state, ready } = useDemo();
+  if (!ready) return null;
 
-export const dynamic = "force-dynamic";
-export default async function ProfitLossPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ from?: string; to?: string }>;
-}) {
-  const sp = await searchParams;
-  const data = await profitAndLoss(sp.from, sp.to);
-  const csv = [
-    ["Section", "Code", "Name", "Amount"],
-    ...data.income.map((r) => ["Income", r.code, r.name, String(r.amount)]),
-    ["COGS", "", "Cost of goods (stock out)", String(data.cogs)],
-    ...data.expenses.map((r) => ["Expense", r.code, r.name, String(r.amount)]),
-    ["", "", "Net", String(data.net)],
-  ];
+  let income = 0;
+  let expense = 0;
+  for (const v of state.vouchers) {
+    for (const l of v.lines) {
+      const acc = state.accounts.find((a) => a.id === l.accountId);
+      if (!acc) continue;
+      if (acc.type === "INCOME") income += l.credit - l.debit;
+      if (acc.type === "EXPENSE") expense += l.debit - l.credit;
+    }
+  }
+  income = roundMoney(income);
+  expense = roundMoney(expense);
+  const net = roundMoney(income - expense);
 
   return (
     <div>
-      <PageHeader title={<Tx k="profitLoss" />} />
-      <Suspense>
-        <DateRangeFilter />
-      </Suspense>
-      <div className="mb-3 no-print">
-        <ExportCsvButton filename="profit-loss.csv" rows={csv} />
-      </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="card-panel">
-          <h2 className="mb-3 font-display text-lg font-semibold text-[var(--accent)]">
-            Income (آمدنی)
-          </h2>
-          <ul className="space-y-2 text-sm">
-            {data.income.map((r) => (
-              <li key={r.code} className="flex justify-between gap-2">
-                <span>
-                  {r.code} {r.name}
-                </span>
-                <span className="tabular-nums">{formatPKR(r.amount)}</span>
-              </li>
-            ))}
-            <li className="flex justify-between border-t border-[var(--border)] pt-2 font-semibold">
-              <span><Tx k="total" /></span>
-              <span>{formatPKR(data.totalIncome)}</span>
-            </li>
-          </ul>
+      <PageHeader title="Profit & Loss" subtitle="Demo P&L" />
+      <div className="card-panel space-y-3 text-sm">
+        <div className="flex justify-between">
+          <span>Income</span>
+          <span className="tabular-nums">{formatPKR(income)}</span>
         </div>
-        <div className="card-panel">
-          <h2 className="mb-3 font-display text-lg font-semibold text-[var(--accent)]">
-            Expenses (اخراجات)
-          </h2>
-          <ul className="space-y-2 text-sm">
-            {data.cogs ? (
-              <li className="flex justify-between gap-2">
-                <span>COGS (سٹاک آؤٹ)</span>
-                <span className="tabular-nums">{formatPKR(data.cogs)}</span>
-              </li>
-            ) : null}
-            {data.expenses.map((r) => (
-              <li key={r.code} className="flex justify-between gap-2">
-                <span>
-                  {r.code} {r.name}
-                </span>
-                <span className="tabular-nums">{formatPKR(r.amount)}</span>
-              </li>
-            ))}
-            <li className="flex justify-between border-t border-[var(--border)] pt-2 font-semibold">
-              <span><Tx k="total" /></span>
-              <span>{formatPKR(data.totalExpense)}</span>
-            </li>
-          </ul>
+        <div className="flex justify-between">
+          <span>Expenses</span>
+          <span className="tabular-nums">{formatPKR(expense)}</span>
         </div>
-      </div>
-      <div className="card-panel mt-4 flex items-center justify-between">
-        <span className="font-display text-xl font-bold">
-          {data.net >= 0 ? "Net Profit (منافع)" : "Net Loss (نقصان)"}
-        </span>
-        <span className="font-display text-2xl font-bold tabular-nums text-[var(--accent)]">
-          {formatPKR(Math.abs(data.net))}
-        </span>
+        <div className="flex justify-between border-t border-[var(--border)] pt-3 font-semibold">
+          <span>Net</span>
+          <span className="tabular-nums text-[var(--accent)]">{formatPKR(net)}</span>
+        </div>
       </div>
     </div>
   );

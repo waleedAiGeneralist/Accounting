@@ -1,27 +1,25 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createJournalVoucher } from "@/app/actions/vouchers";
 import { FormField, Input, Select, Textarea, Button } from "@/components/ui/FormField";
 import { Flash } from "./Flash";
 import { Tx } from "@/components/i18n/Tx";
 import { usePrefs } from "@/components/prefs/PreferencesProvider";
 import { todayISO } from "@/lib/dates";
 import { roundMoney, formatPKR } from "@/lib/money";
-
-type Account = { id: string; code: string; name: string; nameUrdu: string; isSystem: boolean };
+import { useDemo } from "@/lib/demo/store";
 
 type Line = { accountId: string; debit: string; credit: string };
 
-export function JournalForm({ accounts }: { accounts: Account[] }) {
+export function JournalForm() {
   const router = useRouter();
   const { t, lang } = usePrefs();
-  const [pending, start] = useTransition();
+  const { state, addVoucher } = useDemo();
+  const postable = state.accounts.filter((a) => !a.isSystem && a.isActive);
   const [error, setError] = useState<string | null>(null);
   const [date, setDate] = useState(todayISO());
   const [narration, setNarration] = useState("");
-  const postable = accounts.filter((a) => !a.isSystem);
   const [lines, setLines] = useState<Line[]>([
     { accountId: postable[0]?.id ?? "", debit: "", credit: "" },
     { accountId: postable[1]?.id ?? "", debit: "", credit: "" },
@@ -33,14 +31,10 @@ export function JournalForm({ accounts }: { accounts: Account[] }) {
     return { debit, credit, balanced: Math.abs(debit - credit) < 0.005 };
   }, [lines]);
 
-  function accountLabel(a: Account) {
+  function accountLabel(a: (typeof postable)[0]) {
     if (lang === "ur") return `${a.code} — ${a.nameUrdu}`;
     if (lang === "both") return `${a.code} — ${a.name} (${a.nameUrdu})`;
     return `${a.code} — ${a.name}`;
-  }
-
-  function updateLine(i: number, patch: Partial<Line>) {
-    setLines((prev) => prev.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
   }
 
   function onSubmit(e: React.FormEvent) {
@@ -50,122 +44,85 @@ export function JournalForm({ accounts }: { accounts: Account[] }) {
       setError(`Unbalanced: Dr ${totals.debit} ≠ Cr ${totals.credit}`);
       return;
     }
-    start(async () => {
-      const res = await createJournalVoucher({
-        date,
-        narration,
-        lines: lines.map((l) => ({
-          accountId: l.accountId,
-          debit: Number(l.debit || 0),
-          credit: Number(l.credit || 0),
-        })),
-      });
-      if (!res.ok) {
-        setError(res.error);
-        return;
-      }
-      router.push(`/vouchers/${res.id}`);
-      router.refresh();
+    const res = addVoucher({
+      date,
+      type: "JOURNAL",
+      narration: narration || "Journal entry",
+      lines: lines.map((l) => ({
+        accountId: l.accountId,
+        debit: Number(l.debit || 0),
+        credit: Number(l.credit || 0),
+      })),
     });
+    if (!res.ok) return setError(res.error);
+    router.push(`/vouchers/${res.id}`);
   }
 
   return (
-    <form onSubmit={onSubmit} className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+    <form className="flex flex-col gap-4" onSubmit={onSubmit}>
       <Flash error={error} />
-      <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label={<Tx k="date" />}>
-          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required autoFocus />
-        </FormField>
-        <FormField label={<Tx k="narration" />}>
-          <Textarea rows={1} value={narration} onChange={(e) => setNarration(e.target.value)} required />
-        </FormField>
-      </div>
-
-      <div className="table-scroll rounded-md border border-[var(--border)]">
-        <table className="w-full text-sm">
-          <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
-            <tr>
-              <th className="px-3 py-2">
-                <Tx k="account" />
-              </th>
-              <th className="w-32 px-3 py-2">
-                <Tx k="debit" />
-              </th>
-              <th className="w-32 px-3 py-2">
-                <Tx k="credit" />
-              </th>
-              <th className="w-16 px-3 py-2" />
-            </tr>
-          </thead>
-          <tbody>
-            {lines.map((line, i) => (
-              <tr key={i} className="border-t border-[var(--border)]">
-                <td className="px-2 py-1.5">
-                  <Select
-                    value={line.accountId}
-                    onChange={(e) => updateLine(i, { accountId: e.target.value })}
-                  >
-                    {postable.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {accountLabel(a)}
-                      </option>
-                    ))}
-                  </Select>
-                </td>
-                <td className="px-2 py-1.5">
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={line.debit}
-                    onChange={(e) =>
-                      updateLine(i, { debit: e.target.value, credit: e.target.value ? "" : line.credit })
-                    }
-                  />
-                </td>
-                <td className="px-2 py-1.5">
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={line.credit}
-                    onChange={(e) =>
-                      updateLine(i, { credit: e.target.value, debit: e.target.value ? "" : line.debit })
-                    }
-                  />
-                </td>
-                <td className="px-2 py-1.5">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="px-2"
-                    disabled={lines.length <= 2}
-                    onClick={() => setLines((prev) => prev.filter((_, idx) => idx !== i))}
-                  >
-                    ×
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr className="border-t border-[var(--border)] bg-[var(--surface-2)] font-semibold">
-              <td className="px-3 py-2">
-                <Tx k="total" />
-              </td>
-              <td className="px-3 py-2">{formatPKR(totals.debit)}</td>
-              <td className="px-3 py-2">{formatPKR(totals.credit)}</td>
-              <td />
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-
-      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+      <FormField label="Date">
+        <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+      </FormField>
+      <FormField label={<Tx k="narration" />}>
+        <Textarea value={narration} onChange={(e) => setNarration(e.target.value)} />
+      </FormField>
+      {lines.map((l, i) => (
+        <div key={i} className="grid grid-cols-1 gap-2 rounded-md border border-[var(--border)] p-3 sm:grid-cols-3">
+          <FormField label="Account">
+            <Select
+              value={l.accountId}
+              onChange={(e) =>
+                setLines((prev) =>
+                  prev.map((row, idx) =>
+                    idx === i ? { ...row, accountId: e.target.value } : row
+                  )
+                )
+              }
+            >
+              {postable.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {accountLabel(a)}
+                </option>
+              ))}
+            </Select>
+          </FormField>
+          <FormField label="Debit">
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              value={l.debit}
+              onChange={(e) =>
+                setLines((prev) =>
+                  prev.map((row, idx) =>
+                    idx === i ? { ...row, debit: e.target.value, credit: "" } : row
+                  )
+                )
+              }
+            />
+          </FormField>
+          <FormField label="Credit">
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              value={l.credit}
+              onChange={(e) =>
+                setLines((prev) =>
+                  prev.map((row, idx) =>
+                    idx === i ? { ...row, credit: e.target.value, debit: "" } : row
+                  )
+                )
+              }
+            />
+          </FormField>
+        </div>
+      ))}
+      <div className="flex flex-wrap gap-2">
         <Button
           type="button"
-          variant="secondary"
-          className="w-full sm:w-auto"
+          className="border border-[var(--border)] bg-[var(--surface)] text-[var(--fg)]"
           onClick={() =>
             setLines((prev) => [
               ...prev,
@@ -173,15 +130,15 @@ export function JournalForm({ accounts }: { accounts: Account[] }) {
             ])
           }
         >
-          + Line
+          Add line
         </Button>
-        <Button type="submit" disabled={pending || !totals.balanced} className="w-full sm:w-auto">
-          {pending ? "…" : t("save")}
-        </Button>
-        <Button type="button" variant="ghost" className="w-full sm:w-auto" onClick={() => router.back()}>
-          {t("cancel")}
-        </Button>
+        <div className="ms-auto self-center text-sm text-[var(--muted)]">
+          Dr {formatPKR(totals.debit)} · Cr {formatPKR(totals.credit)}
+        </div>
       </div>
+      <Button type="submit" disabled={!totals.balanced}>
+        {t("save")}
+      </Button>
     </form>
   );
 }

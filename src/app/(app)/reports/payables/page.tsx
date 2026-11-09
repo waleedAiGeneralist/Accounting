@@ -1,77 +1,47 @@
-import Link from "next/link";
-import { Tx } from "@/components/i18n/Tx";
+"use client";
+
 import { PageHeader } from "@/components/PageHeader";
-import { ExportCsvButton } from "@/components/reports/ExportCsvButton";
-import { PrintButton } from "@/components/reports/PrintButton";
-import { payablesAging } from "@/lib/reports";
-import { formatPKR } from "@/lib/money";
+import { formatPKR, roundMoney } from "@/lib/money";
+import { useDemo } from "@/lib/demo/store";
+import { accountByCode } from "@/lib/demo/compute";
 
-
-export const dynamic = "force-dynamic";
-export default async function PayablesPage() {
-  const rows = await payablesAging();
-  const csv = [
-    ["Party", "Phone", "0-30", "31-60", "61-90", "91-120", "120+", "Total"],
-    ...rows.map((r) => [
-      r.partyName,
-      r.phone ?? "",
-      String(r.current),
-      String(r.d30),
-      String(r.d60),
-      String(r.d90),
-      String(r.older),
-      String(r.total),
-    ]),
-  ];
+export default function PayablesPage() {
+  const { state, ready } = useDemo();
+  if (!ready) return null;
+  const pay = accountByCode(state.accounts, "2001");
+  const byParty = new Map<string, number>();
+  for (const v of state.vouchers) {
+    if (!v.partyId) continue;
+    for (const l of v.lines) {
+      if (l.accountId !== pay?.id) continue;
+      byParty.set(v.partyId, roundMoney((byParty.get(v.partyId) ?? 0) + l.credit - l.debit));
+    }
+  }
+  const rows = [...byParty.entries()]
+    .map(([id, bal]) => ({
+      party: state.parties.find((p) => p.id === id),
+      bal,
+    }))
+    .filter((r) => r.party && r.bal > 0);
 
   return (
     <div>
-      <PageHeader title={<Tx k="payables" />} subtitle="Supplier aging (عمر)" />
-      <div className="mb-3 no-print flex gap-2">
-        <ExportCsvButton filename="payables.csv" rows={csv} />
-        <PrintButton />
-      </div>
+      <PageHeader title="Payables" subtitle="What we owe suppliers" />
       <div className="card-panel table-scroll p-0">
         <table className="w-full text-sm">
           <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
             <tr>
-              <th className="px-3 py-2"><Tx k="party" /></th>
-              <th className="px-3 py-2 text-right">0–30</th>
-              <th className="px-3 py-2 text-right">31–60</th>
-              <th className="px-3 py-2 text-right">61–90</th>
-              <th className="px-3 py-2 text-right">91–120</th>
-              <th className="px-3 py-2 text-right">120+</th>
-              <th className="px-3 py-2 text-right"><Tx k="total" /></th>
+              <th className="px-3 py-2">Party</th>
+              <th className="px-3 py-2">Balance</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.partyId} className="border-t border-[var(--border)]">
-                <td className="px-3 py-2">
-                  <Link
-                    href={`/reports/ledger?partyId=${r.partyId}`}
-                    className="text-[var(--accent)] hover:underline"
-                  >
-                    {r.partyName}
-                  </Link>
-                </td>
-                <td className="px-3 py-2 text-right tabular-nums">{formatPKR(r.current)}</td>
-                <td className="px-3 py-2 text-right tabular-nums">{formatPKR(r.d30)}</td>
-                <td className="px-3 py-2 text-right tabular-nums">{formatPKR(r.d60)}</td>
-                <td className="px-3 py-2 text-right tabular-nums">{formatPKR(r.d90)}</td>
-                <td className="px-3 py-2 text-right tabular-nums">{formatPKR(r.older)}</td>
-                <td className="px-3 py-2 text-right font-semibold tabular-nums">
-                  {formatPKR(r.total)}
-                </td>
+              <tr key={r.party!.id} className="border-t border-[var(--border)]">
+                <td className="px-3 py-2">{r.party!.name}</td>
+                <td className="px-3 py-2 tabular-nums">{formatPKR(r.bal)}</td>
               </tr>
             ))}
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-3 py-8 text-center text-[var(--muted)]">
-                  No payables
-                </td>
-              </tr>
-            ) : null}
           </tbody>
         </table>
       </div>

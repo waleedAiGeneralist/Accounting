@@ -1,144 +1,76 @@
+"use client";
+
 import Link from "next/link";
-import { Tx } from "@/components/i18n/Tx";
-import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { useParams } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
-import { VoucherActions } from "@/components/vouchers/VoucherActions";
-import { VOUCHER_TYPE_KEYS } from "@/lib/labels";
-import { formatDate } from "@/lib/dates";
 import { formatPKR } from "@/lib/money";
+import { useDemo } from "@/lib/demo/store";
 
-export const dynamic = "force-dynamic";
-
-export default async function VoucherDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const voucher = await prisma.voucher.findUnique({
-    where: { id },
-    include: {
-      party: true,
-      lines: { include: { account: true }, orderBy: { debit: "desc" } },
-      stockMoves: { include: { item: true } },
-      reversedBy: true,
-      reverses: true,
-    },
-  });
-  if (!voucher) notFound();
-
-  const totalDebit = voucher.lines.reduce((s, l) => s + l.debit, 0);
-  const totalCredit = voucher.lines.reduce((s, l) => s + l.credit, 0);
-  const canReverse = !voucher.isReversal && !voucher.reversedBy;
-  const typeKey = VOUCHER_TYPE_KEYS[voucher.type];
+export default function VoucherDetailPage() {
+  const params = useParams<{ id: string }>();
+  const { state, ready, reverseVoucher } = useDemo();
+  if (!ready) return null;
+  const v = state.vouchers.find((x) => x.id === params.id);
+  if (!v) {
+    return (
+      <div className="card-panel">
+        Voucher not found. <Link href="/vouchers">Back</Link>
+      </div>
+    );
+  }
+  const party = state.parties.find((p) => p.id === v.partyId);
+  const accName = (id: string) => {
+    const a = state.accounts.find((x) => x.id === id);
+    return a ? `${a.code} ${a.name}` : id;
+  };
+  const alreadyReversed = state.vouchers.some((x) => x.reversesId === v.id);
 
   return (
-    <div>
+    <div className="space-y-4">
       <PageHeader
-        title={typeKey ? <Tx k={typeKey} /> : voucher.type}
-        subtitle={formatDate(voucher.date)}
+        title={v.type}
+        subtitle={v.narration}
         actions={
-          <Link
-            href="/vouchers"
-            className="no-print rounded-md border border-[var(--border)] px-3 py-2 text-sm"
-          >
-            ← Back
-          </Link>
+          !v.isReversal && !alreadyReversed ? (
+            <button
+              type="button"
+              className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm"
+              onClick={() => {
+                if (!confirm("Reverse this voucher?")) return;
+                const res = reverseVoucher(v.id);
+                if (!res.ok) alert(res.error);
+                else window.location.href = `/vouchers/${res.id}`;
+              }}
+            >
+              Reverse
+            </button>
+          ) : null
         }
       />
-
-      <div className="mb-4 grid gap-4 md:grid-cols-3">
-        <div className="card-panel">
-          <div className="text-xs text-[var(--muted)]"><Tx k="party" /></div>
-          <div className="font-semibold">{voucher.party?.name ?? "—"}</div>
-        </div>
-        <div className="card-panel md:col-span-2">
-          <div className="text-xs text-[var(--muted)]"><Tx k="narration" /></div>
-          <div>{voucher.narration}</div>
-          {voucher.isReversal && voucher.reverses ? (
-            <p className="mt-2 text-xs text-amber-700">
-              Reverses{" "}
-              <Link className="underline" href={`/vouchers/${voucher.reverses.id}`}>
-                {voucher.reverses.id.slice(0, 8)}…
-              </Link>
-            </p>
-          ) : null}
-          {voucher.reversedBy ? (
-            <p className="mt-2 text-xs text-red-700">
-              Reversed by{" "}
-              <Link className="underline" href={`/vouchers/${voucher.reversedBy.id}`}>
-                {voucher.reversedBy.id.slice(0, 8)}…
-              </Link>
-            </p>
-          ) : null}
-        </div>
+      <div className="card-panel text-sm">
+        <div>Date: {v.date}</div>
+        <div>Party: {party?.name ?? "—"}</div>
+        {v.isReversal ? <div>Reversal of {v.reversesId}</div> : null}
       </div>
-
-      <div className="card-panel mb-4 table-scroll p-0">
+      <div className="card-panel table-scroll p-0">
         <table className="w-full text-sm">
           <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
             <tr>
-              <th className="px-3 py-2"><Tx k="account" /></th>
-              <th className="px-3 py-2 text-right"><Tx k="debit" /></th>
-              <th className="px-3 py-2 text-right"><Tx k="credit" /></th>
+              <th className="px-3 py-2">Account</th>
+              <th className="px-3 py-2">Debit</th>
+              <th className="px-3 py-2">Credit</th>
             </tr>
           </thead>
           <tbody>
-            {voucher.lines.map((l) => (
+            {v.lines.map((l) => (
               <tr key={l.id} className="border-t border-[var(--border)]">
-                <td className="px-3 py-2">
-                  {l.account.code} — {l.account.name}{" "}
-                  <span className="urdu text-[var(--muted)]">({l.account.nameUrdu})</span>
-                </td>
-                <td className="px-3 py-2 text-right tabular-nums">
-                  {l.debit ? formatPKR(l.debit) : ""}
-                </td>
-                <td className="px-3 py-2 text-right tabular-nums">
-                  {l.credit ? formatPKR(l.credit) : ""}
-                </td>
+                <td className="px-3 py-2">{accName(l.accountId)}</td>
+                <td className="px-3 py-2 tabular-nums">{l.debit ? formatPKR(l.debit) : ""}</td>
+                <td className="px-3 py-2 tabular-nums">{l.credit ? formatPKR(l.credit) : ""}</td>
               </tr>
             ))}
           </tbody>
-          <tfoot>
-            <tr className="border-t border-[var(--border)] bg-[var(--surface-2)] font-semibold">
-              <td className="px-3 py-2"><Tx k="total" /></td>
-              <td className="px-3 py-2 text-right">{formatPKR(totalDebit)}</td>
-              <td className="px-3 py-2 text-right">{formatPKR(totalCredit)}</td>
-            </tr>
-          </tfoot>
         </table>
-      </div>
-
-      {voucher.stockMoves.length > 0 ? (
-        <div className="card-panel mb-4 table-scroll p-0">
-          <table className="w-full text-sm">
-            <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
-              <tr>
-                <th className="px-3 py-2"><Tx k="item" /></th>
-                <th className="px-3 py-2 text-right">In</th>
-                <th className="px-3 py-2 text-right">Out</th>
-                <th className="px-3 py-2 text-right"><Tx k="rate" /></th>
-              </tr>
-            </thead>
-            <tbody>
-              {voucher.stockMoves.map((m) => (
-                <tr key={m.id} className="border-t border-[var(--border)]">
-                  <td className="px-3 py-2">
-                    {m.item.name} ({m.item.unit})
-                  </td>
-                  <td className="px-3 py-2 text-right">{m.qtyIn || ""}</td>
-                  <td className="px-3 py-2 text-right">{m.qtyOut || ""}</td>
-                  <td className="px-3 py-2 text-right">{formatPKR(m.rate)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : null}
-
-      <div className="no-print">
-        <VoucherActions id={voucher.id} canReverse={canReverse} />
       </div>
     </div>
   );

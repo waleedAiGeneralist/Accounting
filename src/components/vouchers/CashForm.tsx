@@ -1,46 +1,41 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createCashVoucher } from "@/app/actions/vouchers";
 import { FormField, Input, Select, Textarea, Button } from "@/components/ui/FormField";
 import { Flash } from "./Flash";
 import { Tx } from "@/components/i18n/Tx";
 import { usePrefs } from "@/components/prefs/PreferencesProvider";
 import { todayISO } from "@/lib/dates";
+import { useDemo } from "@/lib/demo/store";
+import { accountByCode } from "@/lib/demo/compute";
 
-type Party = { id: string; name: string; type: string };
-type Account = { id: string; code: string; name: string; nameUrdu: string };
-
-export function CashForm({
-  kind,
-  parties,
-  accounts,
-}: {
-  kind: "receipt" | "payment";
-  parties: Party[];
-  accounts: Account[];
-}) {
+export function CashForm({ kind }: { kind: "receipt" | "payment" }) {
   const router = useRouter();
   const { t, lang } = usePrefs();
-  const [pending, start] = useTransition();
+  const { state, addVoucher } = useDemo();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [date, setDate] = useState(todayISO());
   const [mode, setMode] = useState<"cash" | "bank">("cash");
   const [partyId, setPartyId] = useState("");
+  const cash = accountByCode(state.accounts, "1001");
+  const bank = accountByCode(state.accounts, "1002");
+  const accounts = state.accounts.filter(
+    (a) => a.isActive && !a.isSystem && a.code !== "1001" && a.code !== "1002"
+  );
   const [accountId, setAccountId] = useState(accounts[0]?.id ?? "");
   const [amount, setAmount] = useState("");
   const [narration, setNarration] = useState("");
 
   const filteredParties = useMemo(() => {
     if (kind === "receipt") {
-      return parties.filter((p) => p.type === "CUSTOMER" || p.type === "BOTH");
+      return state.parties.filter((p) => p.type === "CUSTOMER" || p.type === "BOTH");
     }
-    return parties.filter((p) => p.type === "SUPPLIER" || p.type === "BOTH");
-  }, [parties, kind]);
+    return state.parties.filter((p) => p.type === "SUPPLIER" || p.type === "BOTH");
+  }, [state.parties, kind]);
 
-  function accountLabel(a: Account) {
+  function accountLabel(a: (typeof accounts)[0]) {
     if (lang === "ur") return `${a.code} — ${a.nameUrdu}`;
     if (lang === "both") return `${a.code} — ${a.name} (${a.nameUrdu})`;
     return `${a.code} — ${a.name}`;
@@ -50,49 +45,54 @@ export function CashForm({
     e.preventDefault();
     setError(null);
     setSuccess(null);
-    start(async () => {
-      const res = await createCashVoucher({
-        date,
-        kind,
-        mode,
-        partyId: partyId || undefined,
-        accountId,
-        amount: Number(amount),
-        narration,
-      });
-      if (!res.ok) {
-        setError(res.error);
-        return;
-      }
-      setSuccess(`Saved voucher ${res.id}`);
-      setAmount("");
-      setNarration("");
-      router.push(`/vouchers/${res.id}`);
-      router.refresh();
+    const amt = Number(amount);
+    if (!amt || amt <= 0) {
+      setError("Amount must be positive");
+      return;
+    }
+    const cashOrBank = mode === "cash" ? cash : bank;
+    if (!cashOrBank || !accountId) {
+      setError("Missing accounts");
+      return;
+    }
+    const isReceipt = kind === "receipt";
+    const res = addVoucher({
+      date,
+      type: isReceipt ? "CASH_RECEIPT" : "CASH_PAYMENT",
+      narration:
+        narration || (isReceipt ? "Cash receipt" : "Cash payment"),
+      partyId: partyId || null,
+      lines: isReceipt
+        ? [
+            { accountId: cashOrBank.id, debit: amt },
+            { accountId, credit: amt },
+          ]
+        : [
+            { accountId, debit: amt },
+            { accountId: cashOrBank.id, credit: amt },
+          ],
     });
+    if (!res.ok) {
+      setError(res.error);
+      return;
+    }
+    setSuccess("Saved");
+    router.push(`/vouchers/${res.id}`);
   }
 
   return (
-    <form onSubmit={onSubmit} className="mx-auto flex w-full max-w-xl flex-col gap-4">
+    <form className="flex flex-col gap-4" onSubmit={onSubmit}>
       <Flash error={error} success={success} />
-      <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label={<Tx k="date" />}>
-          <Input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            required
-            autoFocus
-          />
-        </FormField>
-        <FormField label={<Tx k="cash" />}>
-          <Select value={mode} onChange={(e) => setMode(e.target.value as "cash" | "bank")}>
-            <option value="cash">{t("cash")}</option>
-            <option value="bank">{t("bank")}</option>
-          </Select>
-        </FormField>
-      </div>
-      <FormField label={<Tx k="party" />}>
+      <FormField label="Date">
+        <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+      </FormField>
+      <FormField label="Mode">
+        <Select value={mode} onChange={(e) => setMode(e.target.value as "cash" | "bank")}>
+          <option value="cash">Cash</option>
+          <option value="bank">Bank / JazzCash</option>
+        </Select>
+      </FormField>
+      <FormField label="Party (optional)">
         <Select value={partyId} onChange={(e) => setPartyId(e.target.value)}>
           <option value="">—</option>
           {filteredParties.map((p) => (
@@ -102,7 +102,7 @@ export function CashForm({
           ))}
         </Select>
       </FormField>
-      <FormField label={<Tx k="account" />}>
+      <FormField label="Account">
         <Select value={accountId} onChange={(e) => setAccountId(e.target.value)} required>
           {accounts.map((a) => (
             <option key={a.id} value={a.id}>
@@ -122,20 +122,9 @@ export function CashForm({
         />
       </FormField>
       <FormField label={<Tx k="narration" />}>
-        <Textarea
-          rows={2}
-          value={narration}
-          onChange={(e) => setNarration(e.target.value)}
-        />
+        <Textarea value={narration} onChange={(e) => setNarration(e.target.value)} />
       </FormField>
-      <div className="flex flex-col-reverse gap-2 sm:flex-row">
-        <Button type="submit" disabled={pending} className="w-full sm:w-auto">
-          {pending ? "…" : t("save")}
-        </Button>
-        <Button type="button" variant="ghost" className="w-full sm:w-auto" onClick={() => router.back()}>
-          {t("cancel")}
-        </Button>
-      </div>
+      <Button type="submit">{t("save")}</Button>
     </form>
   );
 }

@@ -1,36 +1,29 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createExpenseVoucher } from "@/app/actions/vouchers";
 import { FormField, Input, Select, Textarea, Button } from "@/components/ui/FormField";
 import { Flash } from "./Flash";
 import { Tx } from "@/components/i18n/Tx";
 import { usePrefs } from "@/components/prefs/PreferencesProvider";
 import { todayISO } from "@/lib/dates";
+import { useDemo } from "@/lib/demo/store";
+import { accountByCode } from "@/lib/demo/compute";
 
-type Account = { id: string; code: string; name: string; nameUrdu: string };
-type Party = { id: string; name: string };
-
-export function ExpenseForm({
-  accounts,
-  parties,
-}: {
-  accounts: Account[];
-  parties: Party[];
-}) {
+export function ExpenseForm() {
   const router = useRouter();
   const { t, lang } = usePrefs();
-  const [pending, start] = useTransition();
+  const { state, addVoucher } = useDemo();
+  const expenseAccounts = state.accounts.filter((a) => a.type === "EXPENSE" && a.isActive);
   const [error, setError] = useState<string | null>(null);
   const [date, setDate] = useState(todayISO());
-  const [expenseAccountId, setExpenseAccountId] = useState(accounts[0]?.id ?? "");
+  const [expenseAccountId, setExpenseAccountId] = useState(expenseAccounts[0]?.id ?? "");
   const [amount, setAmount] = useState("");
   const [mode, setMode] = useState<"cash" | "bank">("cash");
   const [partyId, setPartyId] = useState("");
   const [narration, setNarration] = useState("");
 
-  function accountLabel(a: Account) {
+  function accountLabel(a: (typeof expenseAccounts)[0]) {
     if (lang === "ur") return `${a.code} — ${a.nameUrdu}`;
     if (lang === "both") return `${a.code} — ${a.name} (${a.nameUrdu})`;
     return `${a.code} — ${a.name}`;
@@ -39,47 +32,57 @@ export function ExpenseForm({
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    start(async () => {
-      const res = await createExpenseVoucher({
-        date,
-        expenseAccountId,
-        amount: Number(amount),
-        mode,
-        partyId: partyId || undefined,
-        narration,
-      });
-      if (!res.ok) {
-        setError(res.error);
-        return;
-      }
-      router.push(`/vouchers/${res.id}`);
-      router.refresh();
+    const amt = Number(amount);
+    if (amt <= 0 || !expenseAccountId) {
+      setError("Amount and expense account required");
+      return;
+    }
+    const cashOrBank = accountByCode(state.accounts, mode === "cash" ? "1001" : "1002");
+    if (!cashOrBank) {
+      setError("Cash/Bank account missing");
+      return;
+    }
+    const res = addVoucher({
+      date,
+      type: "EXPENSE",
+      narration: narration || "Expense",
+      partyId: partyId || null,
+      lines: [
+        { accountId: expenseAccountId, debit: amt },
+        { accountId: cashOrBank.id, credit: amt },
+      ],
     });
+    if (!res.ok) return setError(res.error);
+    router.push(`/vouchers/${res.id}`);
   }
 
   return (
-    <form onSubmit={onSubmit} className="mx-auto flex w-full max-w-xl flex-col gap-4">
+    <form className="flex flex-col gap-4" onSubmit={onSubmit}>
       <Flash error={error} />
-      <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label={<Tx k="date" />}>
-          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required autoFocus />
-        </FormField>
-        <FormField label={<Tx k="cash" />}>
-          <Select value={mode} onChange={(e) => setMode(e.target.value as "cash" | "bank")}>
-            <option value="cash">{t("cash")}</option>
-            <option value="bank">{t("bank")}</option>
-          </Select>
-        </FormField>
-      </div>
-      <FormField label={<Tx k="account" />}>
-        <Select
-          value={expenseAccountId}
-          onChange={(e) => setExpenseAccountId(e.target.value)}
-          required
-        >
-          {accounts.map((a) => (
+      <FormField label="Date">
+        <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+      </FormField>
+      <FormField label="Expense account">
+        <Select value={expenseAccountId} onChange={(e) => setExpenseAccountId(e.target.value)} required>
+          {expenseAccounts.map((a) => (
             <option key={a.id} value={a.id}>
               {accountLabel(a)}
+            </option>
+          ))}
+        </Select>
+      </FormField>
+      <FormField label="Pay from">
+        <Select value={mode} onChange={(e) => setMode(e.target.value as "cash" | "bank")}>
+          <option value="cash">Cash</option>
+          <option value="bank">Bank</option>
+        </Select>
+      </FormField>
+      <FormField label="Party (optional)">
+        <Select value={partyId} onChange={(e) => setPartyId(e.target.value)}>
+          <option value="">—</option>
+          {state.parties.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
             </option>
           ))}
         </Select>
@@ -87,27 +90,10 @@ export function ExpenseForm({
       <FormField label={<Tx k="amount" />}>
         <Input type="number" min="0" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required />
       </FormField>
-      <FormField label={<Tx k="party" />}>
-        <Select value={partyId} onChange={(e) => setPartyId(e.target.value)}>
-          <option value="">—</option>
-          {parties.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </Select>
-      </FormField>
       <FormField label={<Tx k="narration" />}>
-        <Textarea rows={2} value={narration} onChange={(e) => setNarration(e.target.value)} required />
+        <Textarea value={narration} onChange={(e) => setNarration(e.target.value)} />
       </FormField>
-      <div className="flex flex-col-reverse gap-2 sm:flex-row">
-        <Button type="submit" disabled={pending} className="w-full sm:w-auto">
-          {pending ? "…" : t("save")}
-        </Button>
-        <Button type="button" variant="ghost" className="w-full sm:w-auto" onClick={() => router.back()}>
-          {t("cancel")}
-        </Button>
-      </div>
+      <Button type="submit">{t("save")}</Button>
     </form>
   );
 }
