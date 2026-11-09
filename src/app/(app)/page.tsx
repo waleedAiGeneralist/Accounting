@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Tx } from "@/components/i18n/Tx";
 import { formatPKR } from "@/lib/money";
 import { useDemo } from "@/lib/demo/store";
-import { dashboardStats, recentVouchers } from "@/lib/demo/compute";
+import { dashboardStats, recentVouchers, pettyCashBook } from "@/lib/demo/compute";
 
 export default function DashboardPage() {
   const { state, ready } = useDemo();
@@ -14,99 +14,105 @@ export default function DashboardPage() {
   }
   const stats = dashboardStats(state);
   const recent = recentVouchers(state);
+  const book = pettyCashBook(state);
+  const closing = book[book.length - 1]?.balance ?? stats.cash;
   const partyName = (id: string | null) =>
     state.parties.find((p) => p.id === id)?.name ?? "—";
 
   const cards = [
-    { key: "todaySales" as const, value: stats.todaySales },
-    { key: "cash" as const, value: stats.cash },
-    { key: "bank" as const, value: stats.bank },
-    { key: "receivables" as const, value: stats.receivables },
-    { key: "payables" as const, value: stats.payables },
+    { label: "Petty Cash", value: closing },
+    { label: "Bank (ABL #24)", value: stats.bank },
+    { label: "Payables", value: stats.payables },
+    { label: "Receivables", value: stats.receivables },
+    { label: "Parties loaded", value: state.parties.length },
   ];
 
   return (
-    <div className="min-w-0">
+    <div className="min-w-0 space-y-4">
       <PageHeader
         title={<Tx k="appName" />}
         subtitle={
           <span>
-            <Tx k="shop" /> · client demo (browser data)
+            <Tx k="shop" /> · petty cash double-entry demo
           </span>
         }
         actions={
           <>
             <Link
-              href="/vouchers/sale"
+              href="/vouchers/cash?kind=payment"
               className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] sm:min-h-10 sm:flex-none"
             >
-              <Tx k="sale" />
-            </Link>
-            <Link
-              href="/vouchers/purchase"
-              className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm font-semibold sm:min-h-10 sm:flex-none"
-            >
-              <Tx k="purchase" />
+              Cash payment
             </Link>
             <Link
               href="/vouchers/cash?kind=receipt"
+              className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm font-semibold sm:min-h-10 sm:flex-none"
+            >
+              Cash receipt
+            </Link>
+            <Link
+              href="/reports/petty-cash"
               className="inline-flex min-h-11 w-full items-center justify-center rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm font-semibold sm:min-h-10 sm:w-auto"
             >
-              <Tx k="cashReceipt" />
+              Petty cash book
             </Link>
           </>
         }
       />
 
-      <div className="mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-3 lg:grid-cols-5">
-        {cards.map((c, i) => (
-          <div
-            key={c.key}
-            className={`card-panel animate-in p-3 sm:p-4 ${
-              i === 0 ? "col-span-2 md:col-span-1" : ""
-            }`}
-            style={{ animationDelay: `${i * 60}ms` }}
-          >
-            <div className="text-[11px] text-[var(--muted)] sm:text-xs">
-              <Tx k={c.key} />
-            </div>
-            <div className="mt-1.5 font-display text-lg font-bold tabular-nums text-[var(--accent)] sm:mt-2 sm:text-2xl">
-              {formatPKR(c.value)}
+      <div className="rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm leading-relaxed">
+        <strong>How to post (demo):</strong> Open{" "}
+        <Link className="text-[var(--accent)] underline" href="/vouchers/cash?kind=payment">
+          Cash payment
+        </Link>
+        → select <em>Party</em> (vendors from your book are already created) → choose{" "}
+        <em>Project</em> + <em>Head of A/C</em> → enter amount. The preview shows Debit head /
+        Credit petty cash. Remaining supplier balance stays on Payables / Trial Balance.
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        {cards.map((c) => (
+          <div key={c.label} className="card-panel">
+            <div className="text-xs text-[var(--muted)]">{c.label}</div>
+            <div className="mt-1 font-display text-lg font-semibold tabular-nums text-[var(--accent)]">
+              {typeof c.value === "number" && c.label !== "Parties loaded"
+                ? formatPKR(c.value)
+                : c.value}
             </div>
           </div>
         ))}
       </div>
 
-      <div className="card-panel p-0">
-        <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] px-3 py-2">
-          <h2 className="font-display text-sm font-semibold sm:text-base">
-            Recent vouchers
+      <div className="card-panel">
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="font-display text-base font-semibold">
+            <Tx k="recentVouchers" />
           </h2>
-          <Link href="/vouchers" className="text-xs text-[var(--accent)] hover:underline">
-            View all
+          <Link href="/vouchers" className="text-sm text-[var(--accent)] hover:underline">
+            <Tx k="viewAll" />
           </Link>
         </div>
         <div className="table-scroll">
           <table className="w-full text-sm">
-            <thead className="bg-[var(--surface-2)] text-left text-[var(--muted)]">
+            <thead className="text-left text-[var(--muted)]">
               <tr>
-                <th className="px-3 py-2">Date</th>
-                <th className="px-3 py-2">Type</th>
-                <th className="px-3 py-2">Party</th>
-                <th className="px-3 py-2">Narration</th>
+                <th className="py-1 pe-2">Date</th>
+                <th className="py-1 pe-2">Type</th>
+                <th className="py-1 pe-2">Party</th>
+                <th className="py-1">Narration</th>
               </tr>
             </thead>
             <tbody>
               {recent.map((v) => (
                 <tr key={v.id} className="border-t border-[var(--border)]">
-                  <td className="px-3 py-2">{v.date}</td>
-                  <td className="px-3 py-2">
-                    <Link className="text-[var(--accent)] hover:underline" href={`/vouchers/${v.id}`}>
+                  <td className="py-1.5 pe-2 whitespace-nowrap">{v.date}</td>
+                  <td className="py-1.5 pe-2">
+                    <Link href={`/vouchers/${v.id}`} className="text-[var(--accent)] hover:underline">
                       {v.type}
                     </Link>
                   </td>
-                  <td className="px-3 py-2">{partyName(v.partyId)}</td>
-                  <td className="px-3 py-2">{v.narration}</td>
+                  <td className="py-1.5 pe-2">{partyName(v.partyId)}</td>
+                  <td className="py-1.5 truncate max-w-[280px]">{v.narration}</td>
                 </tr>
               ))}
             </tbody>

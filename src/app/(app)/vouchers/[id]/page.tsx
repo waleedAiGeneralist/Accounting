@@ -47,10 +47,16 @@ export default function VoucherDetailPage() {
           ) : null
         }
       />
-      <div className="card-panel text-sm">
+      <div className="card-panel text-sm space-y-1">
         <div>Date: {v.date}</div>
         <div>Party: {party?.name ?? "—"}</div>
+        <div>Project: {v.project ?? "—"}</div>
+        <div>Head of A/C: {v.head ?? "—"}</div>
+        <div>Post Ref: {v.postRef ?? "—"}</div>
         {v.isReversal ? <div>Reversal of {v.reversesId}</div> : null}
+        <p className="pt-2 text-[var(--muted)]">
+          Double entry: every debit has a matching credit (trial balance stays in balance).
+        </p>
       </div>
       <div className="card-panel table-scroll p-0">
         <table className="w-full text-sm">

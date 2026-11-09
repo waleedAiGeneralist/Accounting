@@ -10,9 +10,9 @@ import type { LabelKey } from "@/lib/labels";
 
 const LINKS: { href: string; key: LabelKey }[] = [
   { href: "/", key: "dashboard" },
+  { href: "/reports/petty-cash", key: "pettyCash" },
   { href: "/vouchers", key: "vouchers" },
   { href: "/parties", key: "parties" },
-  { href: "/stock", key: "stock" },
   { href: "/accounts", key: "accounts" },
   { href: "/reports", key: "reports" },
   { href: "/settings", key: "settings" },

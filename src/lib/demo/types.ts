@@ -1,6 +1,6 @@
 export type AccountType = "ASSET" | "LIABILITY" | "EQUITY" | "INCOME" | "EXPENSE";
 export type PartyType = "CUSTOMER" | "SUPPLIER" | "BOTH";
-export type StockCategory = "RICE" | "KIRYANA" | "BARDANA";
+export type StockCategory = "RICE" | "KIRYANA" | "BARDANA" | "MATERIAL";
 export type StockUnit = "KG" | "MAUND" | "BAG" | "PCS";
 export type VoucherType =
   | "CASH_RECEIPT"
@@ -55,6 +55,10 @@ export type Voucher = {
   type: VoucherType;
   narration: string;
   partyId: string | null;
+  project: string | null;
+  postRef: string | null;
+  head: string | null;
+  sno: string | null;
   isReversal: boolean;
   reversesId: string | null;
   createdAt: string;
@@ -67,4 +71,5 @@ export type DemoState = {
   parties: Party[];
   stockItems: StockItem[];
   vouchers: Voucher[];
+  projects: string[];
 };

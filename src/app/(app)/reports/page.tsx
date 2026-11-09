@@ -5,14 +5,15 @@ import { PageHeader } from "@/components/PageHeader";
 import { Tx } from "@/components/i18n/Tx";
 
 const LINKS = [
+  { href: "/reports/petty-cash", label: "Petty Cash Book" },
   { href: "/reports/trial-balance", label: "Trial Balance" },
-  { href: "/reports/stock", label: "Stock" },
   { href: "/reports/cash-book", label: "Cash Book" },
   { href: "/reports/profit-loss", label: "Profit & Loss" },
   { href: "/reports/balance-sheet", label: "Balance Sheet" },
   { href: "/reports/ledger", label: "Ledger" },
   { href: "/reports/receivables", label: "Receivables" },
   { href: "/reports/payables", label: "Payables" },
+  { href: "/reports/stock", label: "Stock" },
 ];
 
 export default function ReportsPage() {

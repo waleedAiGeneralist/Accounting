@@ -26,7 +26,7 @@ const urdu = Noto_Naskh_Arabic({
 
 export const metadata: Metadata = {
   title: "Hisab Kitab — Rice & Kiryana",
-  description: "Double-entry accounting for Pakistani rice & kiryana shops",
+  description: "Double-entry petty cash & accounting demo — Hidden Hills Hotels & Resort",
   appleWebApp: {
     capable: true,
     title: "Hisab Kitab",

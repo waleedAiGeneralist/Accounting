@@ -24,7 +24,7 @@ import type {
   VoucherType,
 } from "./types";
 
-const STORAGE_KEY = "hk-demo-ledger-v1";
+const STORAGE_KEY = "hk-demo-ledger-v2-petty";
 
 type DemoApi = {
   ready: boolean;
@@ -41,6 +41,10 @@ type DemoApi = {
     type: VoucherType;
     narration: string;
     partyId?: string | null;
+    project?: string | null;
+    postRef?: string | null;
+    head?: string | null;
+    sno?: string | null;
     lines: Array<{ accountId: string; debit?: number; credit?: number }>;
     stockMoves?: Array<{
       itemId: string;
@@ -73,7 +77,17 @@ function load(): DemoState {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as DemoState;
-      if (parsed?.accounts?.length) return parsed;
+      if (parsed?.accounts?.length) {
+        if (!parsed.projects) parsed.projects = [];
+        parsed.vouchers = (parsed.vouchers ?? []).map((v) => ({
+          ...v,
+          project: v.project ?? null,
+          postRef: v.postRef ?? null,
+          head: v.head ?? null,
+          sno: v.sno ?? null,
+        }));
+        return parsed;
+      }
     }
   } catch {
     /* ignore */
@@ -133,6 +147,10 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       type: VoucherType;
       narration: string;
       partyId?: string | null;
+      project?: string | null;
+      postRef?: string | null;
+      head?: string | null;
+      sno?: string | null;
       lines: Array<{ accountId: string; debit?: number; credit?: number }>;
       stockMoves?: Array<{
         itemId: string;
@@ -158,6 +176,10 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         type: input.type,
         narration: input.narration,
         partyId: input.partyId ?? null,
+        project: input.project ?? null,
+        postRef: input.postRef ?? null,
+        head: input.head ?? null,
+        sno: input.sno ?? null,
         isReversal: false,
         reversesId: null,
         createdAt: new Date().toISOString(),
@@ -198,6 +220,10 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         type: original.type,
         narration: `Reversal of ${original.id}: ${original.narration}`,
         partyId: original.partyId,
+        project: original.project,
+        postRef: original.postRef,
+        head: original.head,
+        sno: original.sno,
         isReversal: true,
         reversesId: original.id,
         createdAt: new Date().toISOString(),
@@ -229,6 +255,14 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       if (!parsed.accounts?.length) {
         return { ok: false as const, error: "Invalid backup" };
       }
+      if (!parsed.projects) parsed.projects = [];
+      parsed.vouchers = (parsed.vouchers ?? []).map((v) => ({
+        ...v,
+        project: v.project ?? null,
+        postRef: v.postRef ?? null,
+        head: v.head ?? null,
+        sno: v.sno ?? null,
+      }));
       setState(parsed);
       persist(parsed);
       return { ok: true as const };
