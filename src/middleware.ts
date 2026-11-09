@@ -5,7 +5,7 @@ const SESSION_COOKIE = "hk_session";
 
 function secretKey() {
   const secret = process.env.AUTH_SECRET?.trim();
-  if (!secret || secret.length < 16) return null;
+  if (!secret || secret.length < 32) return null;
   return new TextEncoder().encode(secret);
 }
 

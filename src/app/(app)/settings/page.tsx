@@ -28,8 +28,9 @@ export default async function SettingsPage() {
       {isAdmin ? (
         <BackupRestore />
       ) : (
-        <div className="card-panel text-sm text-[var(--muted)]">
-          Backup / restore is available to admin accounts only.
+        <div className="card-panel space-y-1 text-sm text-[var(--muted)]">
+          <p>Your account is view-only.</p>
+          <p>Creating vouchers, parties, stock, and backup/restore require an admin.</p>
         </div>
       )}
     </div>

@@ -1,7 +1,6 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
   try {
-    // Apply migrations even if the host runs `next start` without npm scripts.
     const { spawnSync } = await import("node:child_process");
     spawnSync("npx", ["prisma", "migrate", "deploy"], {
       stdio: "inherit",
@@ -12,6 +11,7 @@ export async function register() {
   }
   try {
     const { ensureUsers } = await import("./lib/ensure-users");
+    // Only when ALLOW_SEED_USERS=1 and credentials pass strength checks.
     await ensureUsers({ updateExisting: true });
   } catch (e) {
     console.error("instrumentation: ensure-users failed", e);

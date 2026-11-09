@@ -4,14 +4,31 @@ import {
   createSessionToken,
   SESSION_COOKIE,
 } from "@/lib/auth";
-import { ensureUsers } from "@/lib/ensure-users";
 import { rateLimit } from "@/lib/rate-limit";
 import { safeRedirectPath } from "@/lib/safe-redirect";
+import { assertAuthSecretConfigured } from "@/lib/seed-policy";
+import { isSameOrigin } from "@/lib/same-origin";
 
 const SESSION_DAYS = 14;
 
 export async function POST(req: Request) {
   try {
+    if (!isSameOrigin(req)) {
+      return NextResponse.json(
+        { ok: false, error: "Invalid request origin" },
+        { status: 403 }
+      );
+    }
+
+    try {
+      assertAuthSecretConfigured();
+    } catch {
+      return NextResponse.json(
+        { ok: false, error: "Server auth is not configured" },
+        { status: 500 }
+      );
+    }
+
     const body = (await req.json().catch(() => null)) as {
       email?: string;
       password?: string;
@@ -31,24 +48,33 @@ export async function POST(req: Request) {
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       req.headers.get("x-real-ip") ||
       "unknown";
-    const limited = rateLimit(`login:${ip}:${email.toLowerCase()}`, {
-      limit: 10,
+
+    // Throttle by IP and by email (shared Postgres store).
+    const ipLimit = await rateLimit(`login:ip:${ip}`, {
+      limit: 20,
       windowMs: 15 * 60 * 1000,
     });
-    if (!limited.ok) {
+    if (!ipLimit.ok) {
       return NextResponse.json(
         {
           ok: false,
-          error: `Too many attempts. Try again in ${limited.retryAfterSec}s`,
+          error: `Too many attempts. Try again in ${ipLimit.retryAfterSec}s`,
         },
         { status: 429 }
       );
     }
-
-    try {
-      await ensureUsers({ updateExisting: false });
-    } catch (e) {
-      console.error("api login ensureUsers", e);
+    const emailLimit = await rateLimit(`login:email:${email.toLowerCase()}`, {
+      limit: 10,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!emailLimit.ok) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: `Too many attempts. Try again in ${emailLimit.retryAfterSec}s`,
+        },
+        { status: 429 }
+      );
     }
 
     const user = await authenticate(email, password);
@@ -75,12 +101,6 @@ export async function POST(req: Request) {
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Login failed";
     console.error("api login", msg);
-    if (msg.includes("AUTH_SECRET")) {
-      return NextResponse.json(
-        { ok: false, error: "Server auth is not configured" },
-        { status: 500 }
-      );
-    }
     return NextResponse.json(
       { ok: false, error: "Login failed — please try again" },
       { status: 500 }

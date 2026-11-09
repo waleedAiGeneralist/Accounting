@@ -1,24 +1,46 @@
-type Bucket = { count: number; resetAt: number };
+import { prisma } from "./prisma";
 
-const buckets = new Map<string, Bucket>();
-
-/** Simple in-memory limiter (per server instance). */
-export function rateLimit(
+/**
+ * Shared Postgres-backed limiter (works across instances / restarts).
+ * Falls back to denying closed if the table is unavailable.
+ */
+export async function rateLimit(
   key: string,
   opts: { limit: number; windowMs: number }
-): { ok: true } | { ok: false; retryAfterSec: number } {
+): Promise<{ ok: true } | { ok: false; retryAfterSec: number }> {
   const now = Date.now();
-  const existing = buckets.get(key);
-  if (!existing || existing.resetAt <= now) {
-    buckets.set(key, { count: 1, resetAt: now + opts.windowMs });
+  const resetAt = new Date(now + opts.windowMs);
+
+  try {
+    const existing = await prisma.loginAttempt.findUnique({ where: { key } });
+
+    if (!existing || existing.resetAt.getTime() <= now) {
+      await prisma.loginAttempt.upsert({
+        where: { key },
+        create: { key, count: 1, resetAt },
+        update: { count: 1, resetAt },
+      });
+      return { ok: true };
+    }
+
+    if (existing.count >= opts.limit) {
+      return {
+        ok: false,
+        retryAfterSec: Math.max(
+          1,
+          Math.ceil((existing.resetAt.getTime() - now) / 1000)
+        ),
+      };
+    }
+
+    await prisma.loginAttempt.update({
+      where: { key },
+      data: { count: existing.count + 1 },
+    });
     return { ok: true };
+  } catch (e) {
+    console.error("rateLimit: datastore error", e);
+    // Fail closed for login brute-force protection.
+    return { ok: false, retryAfterSec: 60 };
   }
-  if (existing.count >= opts.limit) {
-    return {
-      ok: false,
-      retryAfterSec: Math.max(1, Math.ceil((existing.resetAt - now) / 1000)),
-    };
-  }
-  existing.count += 1;
-  return { ok: true };
 }

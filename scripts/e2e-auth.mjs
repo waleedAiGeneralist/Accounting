@@ -27,7 +27,11 @@ async function makeToken(email) {
 }
 
 async function req(path, opts = {}) {
-  const res = await fetch(BASE + path, { redirect: "manual", ...opts });
+  const headers = {
+    Origin: BASE.replace(/\/$/, ""),
+    ...(opts.headers || {}),
+  };
+  const res = await fetch(BASE + path, { redirect: "manual", ...opts, headers });
   const text = await res.text().catch(() => "");
   return { status: res.status, location: res.headers.get("location"), text, headers: res.headers };
 }
@@ -96,6 +100,46 @@ async function main() {
   // login already-auth redirects away
   const loginAuthed = await req("/login", adminCookie);
   ok("authed /login redirects", loginAuthed.status === 307 || loginAuthed.status === 302, `status=${loginAuthed.status}`);
+
+  // API login (browser-like Origin header required in production)
+  {
+    const origin = BASE.replace(/\/$/, "");
+    async function apiLogin(email, password) {
+      const res = await fetch(BASE + "/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Origin: origin },
+        body: JSON.stringify({ email, password, next: "/" }),
+      });
+      const setCookie =
+        typeof res.headers.getSetCookie === "function"
+          ? res.headers.getSetCookie()
+          : [];
+      const raw =
+        setCookie.find((c) => c.startsWith("hk_session=")) ||
+        res.headers.get("set-cookie") ||
+        "";
+      const m = /hk_session=([^;]+)/.exec(raw);
+      const data = await res.json();
+      return { status: res.status, data, cookie: m ? m[1] : "" };
+    }
+    const a = await apiLogin(
+      "admin@hisabkitab.app",
+      process.env.SEED_ADMIN_PASSWORD
+    );
+    ok(
+      "api admin login",
+      a.status === 200 && a.data.ok === true && !!a.cookie,
+      JSON.stringify(a.data)
+    );
+    const u = await apiLogin("Naiz@gamil.com", process.env.SEED_USER_PASSWORD);
+    ok(
+      "api user login",
+      u.status === 200 && u.data.ok === true && !!u.cookie,
+      JSON.stringify(u.data)
+    );
+    const bad = await apiLogin("admin@hisabkitab.app", "wrong-password-xxxx");
+    ok("api bad login 401", bad.status === 401 && bad.data.ok === false);
+  }
 
   const failed = results.filter((r) => !r.pass);
   console.log("\n=== SUMMARY ===");

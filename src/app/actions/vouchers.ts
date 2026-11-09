@@ -19,7 +19,7 @@ import { CODES } from "@/lib/accounts";
 import { roundMoney } from "@/lib/money";
 import { toDateOnly } from "@/lib/dates";
 import type { VoucherType, StockCategory } from "@prisma/client";
-import { requireSession } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 
 /** Weighted-average unit cost from prior stock movements. */
 async function avgCost(itemId: string, fallback: number): Promise<number> {
@@ -55,7 +55,7 @@ export async function createCashVoucher(form: {
   narration: string;
 }): Promise<ActionResult> {
   try {
-    await requireSession();
+    await requireAdmin();
     const map = await getAccountsByCodes([CODES.CASH, CODES.BANK]);
     const cashOrBank = form.mode === "cash" ? map.get(CODES.CASH)! : map.get(CODES.BANK)!;
     const amount = roundMoney(form.amount);
@@ -100,7 +100,7 @@ export async function createSaleVoucher(form: {
   narration?: string;
 }): Promise<ActionResult> {
   try {
-    await requireSession();
+    await requireAdmin();
     const item = await prisma.stockItem.findUniqueOrThrow({
       where: { id: form.itemId },
     });
@@ -172,7 +172,7 @@ export async function createPurchaseVoucher(form: {
   narration?: string;
 }): Promise<ActionResult> {
   try {
-    await requireSession();
+    await requireAdmin();
     const item = await prisma.stockItem.findUniqueOrThrow({
       where: { id: form.itemId },
     });
@@ -229,7 +229,7 @@ export async function createExpenseVoucher(form: {
   narration: string;
 }): Promise<ActionResult> {
   try {
-    await requireSession();
+    await requireAdmin();
     const amount = roundMoney(form.amount);
     if (amount <= 0) throw new Error("Amount must be positive");
     const map = await getAccountsByCodes([CODES.CASH, CODES.BANK]);
@@ -260,7 +260,7 @@ export async function createJournalVoucher(form: {
   lines: { accountId: string; debit: number; credit: number }[];
 }): Promise<ActionResult> {
   try {
-    await requireSession();
+    await requireAdmin();
     const v = await createVoucherTx({
       date: toDateOnly(form.date),
       type: "JOURNAL",
@@ -277,7 +277,7 @@ export async function createJournalVoucher(form: {
 
 export async function reverseVoucherAction(id: string): Promise<ActionResult> {
   try {
-    await requireSession();
+    await requireAdmin();
     const v = await reverseVoucher(id);
     revalidateAll();
     return { ok: true, id: v.id };
@@ -291,7 +291,7 @@ export async function editVoucherAction(
   next: CreateVoucherInput
 ): Promise<ActionResult> {
   try {
-    await requireSession();
+    await requireAdmin();
     const v = await editVoucher(id, next);
     revalidateAll();
     return { ok: true, id: v.id };
@@ -306,7 +306,7 @@ export async function createParty(form: {
   type: "CUSTOMER" | "SUPPLIER" | "BOTH";
 }): Promise<ActionResult> {
   try {
-    await requireSession();
+    await requireAdmin();
     const p = await prisma.party.create({
       data: {
         name: form.name.trim(),
@@ -327,7 +327,7 @@ export async function createStockItem(form: {
   unit: "KG" | "MAUND" | "BAG" | "PCS";
 }): Promise<ActionResult> {
   try {
-    await requireSession();
+    await requireAdmin();
     const item = await prisma.stockItem.create({ data: form });
     revalidatePath("/stock");
     return { ok: true, id: item.id };

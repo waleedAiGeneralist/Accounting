@@ -23,6 +23,15 @@ model User {
   updatedAt    DateTime @updatedAt
 }
 
+/** Shared login throttle counters (cross-instance). */
+model LoginAttempt {
+  id      String   @id @default(cuid())
+  key     String   @unique
+  count   Int      @default(0)
+  resetAt DateTime
+  updatedAt DateTime @updatedAt
+}
+
 enum AccountType {
   ASSET
   LIABILITY
