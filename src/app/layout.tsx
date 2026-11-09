@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Source_Sans_3, Noto_Naskh_Arabic } from "next/font/google";
 import { Nav } from "@/components/layout/Nav";
 import { PreferencesProvider } from "@/components/prefs/PreferencesProvider";
+import { DemoProvider } from "@/lib/demo/store";
 import { Tx } from "@/components/i18n/Tx";
 import "./globals.css";
 
@@ -25,7 +26,7 @@ const urdu = Noto_Naskh_Arabic({
 
 export const metadata: Metadata = {
   title: "Hisab Kitab — Rice & Kiryana",
-  description: "Double-entry accounting for Pakistani rice & kiryana shops",
+  description: "Double-entry petty cash & accounting demo — Hidden Hills Hotels & Resort",
   appleWebApp: {
     capable: true,
     title: "Hisab Kitab",
@@ -79,13 +80,15 @@ export default function RootLayout({
       </head>
       <body className="flex min-h-full flex-col antialiased">
         <PreferencesProvider>
-          <div className="page-shell flex min-h-full flex-1 flex-col">
-            <Nav />
-            <main className="page-main">{children}</main>
-            <footer className="no-print border-t border-[var(--border)] px-[var(--page-pad-x)] py-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-center text-xs text-[var(--muted)]">
-              <Tx k="appName" /> · secured · v1
-            </footer>
-          </div>
+          <DemoProvider>
+            <div className="page-shell flex min-h-full flex-1 flex-col">
+              <Nav />
+              <main className="page-main">{children}</main>
+              <footer className="no-print mt-auto border-t border-[var(--border)] px-[var(--page-pad-x)] py-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-center text-xs text-[var(--muted)]">
+                <Tx k="appName" /> · client demo · browser only
+              </footer>
+            </div>
+          </DemoProvider>
         </PreferencesProvider>
       </body>
     </html>

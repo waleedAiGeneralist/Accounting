@@ -10,7 +10,12 @@ function e(en: string, ur: string): DictEntry {
 /** Label dictionary — English + Urdu */
 export const D = {
   appName: e("Hisab Kitab", "حساب کتاب"),
-  shop: e("Rice & Kiryana", "چاول و کریانہ"),
+  shop: e("Hidden Hills Hotels & Resort", "ہڈن ہلز ہوٹلز"),
+  pettyCash: e("Petty Cash Book", "پیٹی کیش بک"),
+  cashPaymentHint: e(
+    "Debit head / party · Credit petty cash",
+    "ڈیبٹ ہیڈ / پارٹی · کریڈٹ پیٹی کیش"
+  ),
   dashboard: e("Dashboard", "ڈیش بورڈ"),
   vouchers: e("Vouchers", "واؤچرز"),
   cashReceipt: e("Cash Receipt", "نقد وصولی"),
