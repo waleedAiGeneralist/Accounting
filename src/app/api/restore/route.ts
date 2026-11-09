@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
 import type {
   AccountType,
   PartyType,
@@ -66,14 +65,8 @@ type BackupPayload = {
   }>;
 };
 
-/** Restore from a JSON backup exported by /api/backup — admin only. */
+/** Restore from a JSON backup exported by /api/backup. */
 export async function POST(req: Request) {
-  try {
-    await requireAdmin();
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const form = await req.formData();
   const file = form.get("file");
   if (!(file instanceof File)) {

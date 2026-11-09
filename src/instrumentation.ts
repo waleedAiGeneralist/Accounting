@@ -9,11 +9,4 @@ export async function register() {
   } catch (e) {
     console.error("instrumentation: migrate failed", e);
   }
-  try {
-    const { ensureUsers } = await import("./lib/ensure-users");
-    // Only when ALLOW_SEED_USERS=1 and credentials pass strength checks.
-    await ensureUsers({ updateExisting: true });
-  } catch (e) {
-    console.error("instrumentation: ensure-users failed", e);
-  }
 }
