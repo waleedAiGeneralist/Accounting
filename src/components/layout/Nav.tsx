@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Tx } from "@/components/i18n/Tx";
 import { NavPreferenceControls } from "@/components/prefs/PreferenceControls";
 import { usePrefs } from "@/components/prefs/PreferencesProvider";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 import type { LabelKey } from "@/lib/labels";
 
 const LINKS: { href: string; key: LabelKey }[] = [
@@ -50,6 +51,8 @@ export function Nav() {
     setOpen(false);
     window.location.href = `/search?q=${encodeURIComponent(q.trim())}`;
   }
+
+  if (pathname === "/login") return null;
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--nav-bg)]/95 pt-[env(safe-area-inset-top,0)] backdrop-blur">
@@ -115,6 +118,7 @@ export function Nav() {
 
         <div className="no-print hidden shrink-0 items-center gap-2 md:flex">
           <NavPreferenceControls />
+          <LogoutButton />
         </div>
 
         <button
@@ -172,6 +176,7 @@ export function Nav() {
 
             <div className="space-y-3 border-t border-[var(--border)] pt-3">
               <NavPreferenceControls compact={false} />
+              <LogoutButton label="Sign out" />
             </div>
           </div>
         </div>

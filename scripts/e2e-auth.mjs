@@ -65,8 +65,8 @@ async function main() {
   ok("login has Sign in", login.text.includes("Sign in"));
   ok("login no This page couldn't load", !login.text.includes("couldn't load"));
 
-  // backup unauth
-  const backup401 = await req("/api/backup");
+  // backup unauth (POST only)
+  const backup401 = await req("/api/backup", { method: "POST" });
   ok("backup unauth 401", backup401.status === 401);
 
   // admin session
@@ -81,7 +81,10 @@ async function main() {
     ok(`admin ${path}`, r.status === 200, `status=${r.status} len=${r.text.length}`);
   }
 
-  const adminBackup = await req("/api/backup", adminCookie);
+  const adminBackup = await req("/api/backup", {
+    ...adminCookie,
+    method: "POST",
+  });
   ok("admin backup 200", adminBackup.status === 200, `status=${adminBackup.status}`);
   ok("admin backup json", adminBackup.text.includes("accounts"));
 
@@ -90,7 +93,10 @@ async function main() {
   const userCookie = { headers: { Cookie: `hk_session=${userTok}` } };
   const userHome = await req("/", userCookie);
   ok("user home 200", userHome.status === 200);
-  const userBackup = await req("/api/backup", userCookie);
+  const userBackup = await req("/api/backup", {
+    ...userCookie,
+    method: "POST",
+  });
   ok("user backup denied", userBackup.status === 401 || userBackup.status === 403, `status=${userBackup.status}`);
 
   // settings shows role

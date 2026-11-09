@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/auth";
+import { isSameOrigin } from "@/lib/same-origin";
 import type {
   AccountType,
   PartyType,
@@ -65,8 +67,20 @@ type BackupPayload = {
   }>;
 };
 
-/** Restore from a JSON backup exported by /api/backup. */
+/** Restore from a JSON backup exported by /api/backup — admin only. */
 export async function POST(req: Request) {
+  if (!isSameOrigin(req)) {
+    return NextResponse.json(
+      { error: "Invalid request origin" },
+      { status: 403 }
+    );
+  }
+  try {
+    await requireAdmin();
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const form = await req.formData();
   const file = form.get("file");
   if (!(file instanceof File)) {
